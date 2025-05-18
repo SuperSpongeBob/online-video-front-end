@@ -12,14 +12,14 @@
                 </template>
             </el-table-column>
             <el-table-column prop="videoIsVip" label="视频类型" width="100" show-overflow-tooltip>
-                        <template #default="scope">
-                            <span>{{ getRule(scope.row.videoIsVip) }}</span>
-                        </template>
-                    </el-table-column>
+                <template #default="scope">
+                    <span>{{ getRule(scope.row.videoIsVip) }}</span>
+                </template>
+            </el-table-column>
             <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
                 <template #default="scope">
                     <span :style="getStatusColor(scope.row.videoApprovalStatus)">{{ scope.row.videoApprovalStatus
-                        }}</span>
+                    }}</span>
                 </template>
             </el-table-column>
             <el-table-column property="videoTitle" label="标题" show-overflow-tooltip />
@@ -141,7 +141,7 @@ export default {
         async approval(row, isDialog) {
             row.videoApprovalStatus = "审核通过"
             const response = await authService.adminUpdateVideo(row)
-            if (response.status == 200) {
+            if (response.status == 200 && response.data == true) {
                 const videoItem = this.videoData.find(item => item.videoId === row.videoId);
                 videoItem.videoApprovalStatus = "审核通过";                                     //  成功更新后表格中的审核状态也实时更新
                 this.$message.success({ message: '审核通过', showClose: true })
@@ -268,22 +268,22 @@ export default {
             // const response = await axios.post('http://localhost:8080/api/videos', this.video)
             const response = await authService.adminFindVideos(this.video)
             console.log(response)
-            if(response.status==204){
-                this.$message.warning({message:'没有更多数据',showClose:true})
+            if (response.status == 204) {
+                this.$message.warning({ message: '没有更多数据', showClose: true })
                 return
             }
 
             //  将数据映射到videoData中
             this.videoData = response.data.map(item => ({
                 videoId: item.videoId,
-                videoIsVip:item.videoIsVip.toString(),
+                videoIsVip: item.videoIsVip.toString(),
                 videoAlbumId: item.videoAlbumId,
                 videoName: item.videoName,
                 videoApprovalStatus: item.videoApprovalStatus,
                 videoTitle: item.videoTitle,
                 videoPath: item.videoPath,
-                duration:item.duration,
-                thumbnailPath:authService.backendAddress()+"/images/"+item.thumbnailPath
+                duration: item.duration,
+                thumbnailPath: authService.backendAddress() + "/images/" + item.thumbnailPath
             }))
         }
     },

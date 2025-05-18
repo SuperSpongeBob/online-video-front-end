@@ -111,7 +111,7 @@ export default {
                 if (this.isLoading) return;
                 this.isLoading = true;
                 const response = await authService.getRecommendVideos(this.pageNum, this.pageSize)
-                // console.log(response.data)
+                console.log(response.data)
                 if (response.status == 200) {
 
                     // 为每个元素的 videoAlbum.videoPostPath 属性添加前缀并处理 null 值

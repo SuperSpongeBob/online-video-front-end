@@ -4,13 +4,33 @@
       <el-table-column prop="name" label="Name" width="180" />
       <el-table-column prop="address" label="Address" />
     </el-table>
+
+    <!-- <video ref="videoRef"
+                    id="myVideo" controls muted controlsList="nodownload" src="http://192.168.1.1/download/动漫/斩神第一集.mp4" autofocus
+                    style="width: 100%; max-height: 75vh;object-fit: contain;">
+                    您的浏览器不支持视频播放。
+                </video> -->
+    127
+    <!-- <img src="http://127.0.0.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
+    1
+    <img src="http://192.168.1.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
+    10
+    <img src="http://192.168.1.10/images/Stolen.png" style="max-width: 240px; height: 180px;">
+    <br>
+    s127
+    <img src="https://127.0.0.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
+    s1
+    <img src="https://192.168.1.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
+    s10
+    <img src="https://192.168.1.10/images/Stolen.png" style="max-width: 240px; height: 180px;"> -->
     <el-button @click="loading=!loading">switch</el-button>
+    <el-button @click="getlocal">getlocal</el-button>
   </template>
   
   <script lang="ts" setup>
-  import { ref } from 'vue'
-  
-  const loading = ref(true)
+import axios from 'axios';
+import { ref } from 'vue'
+  const loading = ref(false)
   
   const tableData = [
     {
@@ -29,6 +49,10 @@
       address: 'No.1518,  Jinshajiang Road, Putuo District',
     },
   ]
+const getlocal = async() => {
+    const response =await axios.get("http://192.168.1.1/images/Stolen.png")
+    console.log(response)
+};
   </script>
   
   <style>

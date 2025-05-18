@@ -77,7 +77,7 @@ export function checkExist(rule, value, callback) {
         callback("不能为空");
     } else {
         //不同项目，自行修改url
-        getRequest("/registerUser" + rule.field + "=" + value).then(reason => {
+        getRequest("/register?" + rule.field + "=" + value).then(reason => {
             if (reason.data === true) {
                 callback("已存在");
             } else {

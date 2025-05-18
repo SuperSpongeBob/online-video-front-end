@@ -60,7 +60,7 @@ export default {
 }
 
 .el-aside {
-    height: 100%;
+    height: 100vh;
     color: #333;
 }
 

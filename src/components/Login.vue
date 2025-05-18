@@ -57,8 +57,8 @@ export default {
     data() {
         return {
             user: {
-                userPhone: "18613160000",
-                userPassword: "Zyxzyx2004"
+                userPhone: "17806573192",
+                userPassword: "admin123"
             },
             loginType: 'user',
             formRef:null,
@@ -67,7 +67,7 @@ export default {
                 userPhone: [
                     { required: true, message: "手机号码不能为空", trigger: "blur" },
                     { validator: isMobilePhoneNumber, trigger: "blur" },
-                    { validator: checkExist, trigger: "blur" },
+                    // { validator: checkExist, trigger: "blur" },
                 ],
                 userPassword: [
                     { required: true, message: "密码不能为空", trigger: "blur" },
@@ -104,7 +104,7 @@ export default {
                                 return
                             }
                             this.$message.success({message:`${data.message}`,showClose:true})
-                            this.$notify.success({title:`尊敬的用户`,message:'您已登录成功',offset: 50,})
+                            this.$notify.success({title:`尊敬的用户`,message:'您已登录成功',position: 'bottom-right',})
                             this.$router.push("/index")
                         }else{
                             this.$message.error({message:`${data.message}`,showClose:true})

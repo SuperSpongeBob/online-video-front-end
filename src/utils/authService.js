@@ -1,8 +1,9 @@
 import axios from "axios";
 import { ElMessage } from 'element-plus';
 
-// const backendAddress = `http://localhost`      // 你的 API 基础 URL
-const backendAddress = `http://192.168.1.1`      // 你的 API 基础 URL
+// const backendAddress = `https://localhost`      // 你的 API 基础 URL
+// const backendAddress = `https://192.168.1.10`      // 你的 API 基础 URL
+const backendAddress = `http://114.132.173.236`
 
 const http = axios.create({
     baseURL: backendAddress,
@@ -157,6 +158,10 @@ export default {
 
     async getVideos(videoDate) {
         return await http.post('/api/videos', videoDate)
+    },
+
+    async videosByUserId(userId){
+        return await http.get(`/api/videosByUserId?userId=${userId}`)
     },
 
     async searchVideo(condition) {

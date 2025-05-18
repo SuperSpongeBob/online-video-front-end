@@ -265,9 +265,6 @@ export default {
             video: {
                 userId: "",
                 videoAlbumId: "",
-                videoAlbum: {
-                    userId: "",
-                }
             },
             videoAlbum: {
                 userId: ""
@@ -566,9 +563,9 @@ export default {
         //  根据用户id获取视频信息
         async getVideo() {
             //  从当前会话中获取用户Id
-            this.video.videoAlbum.userId = JSON.parse(localStorage.getItem('userInfo')).userId
-            const response = await authService.getVideos(this.video)
-            // console.log(response)
+            const userId = JSON.parse(localStorage.getItem('userInfo')).userId
+            const response = await authService.videosByUserId(userId)
+            console.log(response)
             if (response.status == 204) {
                 this.$message.warning({ message: '未查询到数据' })
                 return
