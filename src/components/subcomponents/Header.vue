@@ -2,58 +2,122 @@
     <el-header class="header">
         <div class="logo">
             <img src="../../assets/logo.png" alt="商标" />
-            OnLineVideo &nbsp;&nbsp;
-            <p v-if="role === 'ROLE_ADMIN'">欢迎你，管理员：{{ userName }}</p>
-            <p v-else-if="role === 'ROLE_VIP'">欢迎你，VIP用户：{{ userName }}</p>
-            <p v-else-if="role === 'ROLE_USER'">欢迎你，普通用户：{{ userName }}</p>
-            <p v-else>欢迎你：访客</p>
-            &nbsp;&nbsp;
-            <!-- <el-button v-if="role == 'ROLE_ADMIN'" type="primary"
-                @click="this.$router.push('/admin')">前往后台</el-button> -->
+            <div class="brand-info">
+                <span class="brand-name">OnLineVideo</span>
+                <div class="user-welcome">
+                    <el-tag v-if="role === 'ROLE_ADMIN'" type="danger" size="small" effect="dark" class="role-tag">
+                        <el-icon>
+                            <Setting />
+                        </el-icon>
+                        管理员
+                    </el-tag>
+                    <el-tag v-else-if="role === 'ROLE_VIP'" type="success" size="small" effect="dark" class="role-tag">
+                        <el-icon>
+                            <Star />
+                        </el-icon>
+                        VIP用户
+                    </el-tag>
+                    <el-tag v-else-if="role === 'ROLE_USER'" type="info" size="small" effect="light" class="role-tag">
+                        <el-icon>
+                            <User />
+                        </el-icon>
+                        普通用户
+                    </el-tag>
+                    <el-tag v-else type="info" size="small" effect="plain" class="role-tag">
+                        <el-icon>
+                            <UserFilled />
+                        </el-icon>
+                        访客
+                    </el-tag>
+                    <span class="username" v-if="userName">{{ userName }}</span>
+                </div>
+            </div>
         </div>
+
         <div class="search-box">
-            <el-input v-model="this.searchText" placeholder="输入搜索内容" @keyup.enter.native="search" maxlength="10">
-                <template #append>
-                    <el-button icon="Search" @click="search" />
+            <el-input v-model="this.searchText" placeholder="搜索视频内容..." @keyup.enter.native="search" maxlength="20"
+                class="search-input" clearable>
+                <template #prefix>
+                    <el-icon>
+                        <Search />
+                    </el-icon>
                 </template>
             </el-input>
         </div>
 
         <div class="right-nav">
-            <el-switch v-model="this.backgroundSwitch" @change="closeParticles" inline-prompt active-text="粒子"
-                inactive-text="粒子" />
-            <div class="history">
-                <el-tooltip content="历史记录" placement="bottom" effect="light">
-                    <Clock @click="gotoHistory" style="width: 2em; height: 2em; margin-right: 8px" />
+            <div class="nav-item">
+                <el-tooltip content="粒子背景开关" placement="bottom" effect="light">
+                    <el-switch v-model="this.backgroundSwitch" @change="closeParticles" inline-prompt active-text="开"
+                        inactive-text="关" class="particle-switch" />
                 </el-tooltip>
             </div>
 
-            <div class="history">
+            <div class="nav-item">
+                <el-tooltip content="观看历史" placement="bottom" effect="light">
+                    <div class="icon-btn history-btn" @click="gotoHistory">
+                        <el-icon>
+                            <Clock />
+                        </el-icon>
+                        <span class="btn-text">历史</span>
+                    </div>
+                </el-tooltip>
+            </div>
+
+            <div class="nav-item">
                 <el-tooltip content="上传视频" placement="bottom" effect="light">
-                    <UploadFilled @click="gotoVideoUpload" style="width: 2em; height: 2em; margin-right: 8px" />
+                    <div class="icon-btn upload-btn" @click="gotoVideoUpload">
+                        <el-icon>
+                            <UploadFilled />
+                        </el-icon>
+                        <span class="btn-text">上传</span>
+                    </div>
                 </el-tooltip>
             </div>
 
-            <div class="user-avatar">
-                <el-dropdown>
-                    <UserFilled style="width: 2em; height: 2em; margin-right: 8px" />
-
+            <div class="nav-item user-menu">
+                <el-dropdown trigger="hover">
+                    <div class="icon-btn user-btn">
+                        <el-icon>
+                            <UserFilled />
+                        </el-icon>
+                        <span class="btn-text">{{ LogStatus ? '我的' : '登录' }}</span>
+                    </div>
                     <template #dropdown>
-                        <el-dropdown-menu v-if="LogStatus">
-                            <el-dropdown-item @click="goToPersonal">个人中心</el-dropdown-item>
-                            <el-dropdown-item v-if="role == 'ROLE_ADMIN'"
-                                @click="this.$router.push('/admin')">前往后台</el-dropdown-item>
-                            <!-- <el-dropdown-item @click="test">设置</el-dropdown-item> -->
-                            <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+                        <el-dropdown-menu v-if="LogStatus" class="user-dropdown">
+                            <el-dropdown-item @click="goToPersonal" class="dropdown-item">
+                                <el-icon>
+                                    <User />
+                                </el-icon>
+                                个人中心
+                            </el-dropdown-item>
+                            <el-dropdown-item v-if="role == 'ROLE_ADMIN'" @click="this.$router.push('/admin')"
+                                class="dropdown-item admin-item">
+                                <el-icon>
+                                    <Tools />
+                                </el-icon>
+                                管理后台
+                            </el-dropdown-item>
+                            <el-dropdown-item @click="logout" class="dropdown-item logout-item">
+                                <el-icon>
+                                    <SwitchButton />
+                                </el-icon>
+                                退出登录
+                            </el-dropdown-item>
                         </el-dropdown-menu>
-                        <el-dropdown-menu v-else="LogStatus">
-                            <el-dropdown-item @click="goToLogin">登录<el-icon>
-                                    <ArrowRight />
-                                </el-icon></el-dropdown-item>
-                            <!-- <el-dropdown-item @click="test">设置</el-dropdown-item> -->
-                            <el-dropdown-item @click="goToRegister">注册<el-icon>
-                                    <ArrowRight />
-                                </el-icon></el-dropdown-item>
+                        <el-dropdown-menu v-else class="user-dropdown">
+                            <el-dropdown-item @click="goToLogin" class="dropdown-item">
+                                <el-icon>
+                                    <UserFilled />
+                                </el-icon>
+                                登录
+                            </el-dropdown-item>
+                            <el-dropdown-item @click="goToRegister" class="dropdown-item">
+                                <el-icon>
+                                    <Plus />
+                                </el-icon>
+                                注册
+                            </el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -67,7 +131,32 @@ import { ref } from "vue";
 import authService from "../../utils/authService";
 import eventBus from "../../utils/eventBus";
 import { useUserStore } from "../../utils/userStore";
+import {
+    Search,
+    Clock,
+    UploadFilled,
+    UserFilled,
+    User,
+    Star,
+    Setting,
+    SwitchButton,
+    Plus,
+    Tools
+} from "@element-plus/icons-vue";
+
 export default {
+    components: {
+        Search,
+        Clock,
+        UploadFilled,
+        UserFilled,
+        User,
+        Star,
+        Setting,
+        SwitchButton,
+        Plus,
+        Tools
+    },
     data() {
         const userInfo = JSON.parse(localStorage.getItem("userInfo"))
         return {
@@ -144,201 +233,223 @@ export default {
 }
 </script>
 
-<!-- <script setup>
-import { computed, ref } from "vue";
-import { ElMessage } from "element-plus";
-import { UploadFilled, UserFilled,Search } from "@element-plus/icons-vue";
-import { ElDropdownMenu, ElDropdown, ElDropdownItem, ElIcon } from "element-plus";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
-
-const name = ref("")
-const gotoVideoUpload=()=>{
-  window.open(`/videoUpload/?userId=${sessionStorage.getItem("userId")}`)
-}
-const goto = () => {
-  router.push(`/index/search/${name.value}`)
-
-}
-
-//获取登录状态
-const isLoggedIn = sessionStorage.getItem("LoginState") === "true";
-const search = () => {
-  router.push(`/index/search/${name.value}`)
-
-};
-
-const goToLogin = () => {
-  router.push("/login");
-};
-
-const logout = () => {
-  sessionStorage.setItem("LoginState", false);
-  sessionStorage.removeItem('userId')
-  sessionStorage.removeItem('userInfo')
-  console.log(isLoggedIn);
-  window.location.reload();
-};
-
-const goToPersonal = () => {
-  router.push("/personalCenterIndex");
-};
-
-const goToRegister = () => {
-    this.$router.push('/register')
-};
-</script> -->
-
-
 <style scoped>
-.example-showcase .el-dropdown-link {
-    cursor: pointer;
-    color: var(--el-color-primary);
-    display: flex;
-    align-items: center;
-}
-
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     height: 60px;
     background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 0 24px;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    /* 垂直居中 */
-    gap: 0px;
-    /* 元素间距 */
+    gap: 16px;
 }
 
 .logo img {
     height: 40px;
-    margin-right: 25px;
+    width: auto;
+}
+
+.brand-info {
     display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.brand-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #303133;
+    letter-spacing: 0.5px;
+}
+
+.user-welcome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.role-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    border-radius: 12px;
+    padding: 2px 8px;
+}
+
+.username {
+    font-size: 13px;
+    color: #606266;
+    font-weight: 500;
 }
 
 .search-box {
     max-width: 500px;
     flex: 1;
-    text-align: center;
+    margin: 0 40px;
+}
+
+.search-input {
+    border-radius: 20px;
+}
+
+.search-input :deep(.el-input__wrapper) {
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    height: 33px;
+    border: 2px solid #e4e7ed;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #c0c4cc;
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+    border-color: #409eff;
+}
+
+.search-input :deep(.el-input__inner) {
+    font-size: 16px;
+    height: 44px;
+    line-height: 44px;
+}
+
+.search-input :deep(.el-input__prefix) {
+    font-size: 18px;
+    color: #909399;
 }
 
 .right-nav {
     display: flex;
     align-items: center;
+    gap: 16px;
 }
 
-.history,
-.user-avatar {
-    margin-left: 20px;
+.nav-item {
+    display: flex;
+    align-items: center;
 }
 
-.user-avatar img {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
+.particle-switch {
+    --el-switch-on-color: #409eff;
+    --el-switch-off-color: #dcdfe6;
+}
+
+.icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    border: 1px solid transparent;
+    min-width: 60px;
+}
+
+.icon-btn:hover {
+    background-color: #f5f7fa;
+    border-color: #e4e7ed;
+    transform: translateY(-1px);
+}
+
+.icon-btn .el-icon {
+    font-size: 18px;
+    margin-bottom: 4px;
+    color: #606266;
+}
+
+.btn-text {
+    font-size: 12px;
+    color: #606266;
+    font-weight: 500;
+}
+
+.history-btn:hover .el-icon,
+.history-btn:hover .btn-text {
+    color: #409eff;
+}
+
+.upload-btn:hover .el-icon,
+.upload-btn:hover .btn-text {
+    color: #67c23a;
+}
+
+.user-btn:hover .el-icon,
+.user-btn:hover .btn-text {
+    color: #52c41a;
+}
+
+
+
+.user-dropdown {
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border: none;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f7fa;
+    color: #409eff;
+}
+
+.admin-item {
+    color: #ff4757;
+    font-weight: 500;
+}
+
+.admin-item:hover {
+    background-color: #fff5f5;
+    color: #ff3742;
+}
+
+.logout-item {
+    color: #f56c6c;
+}
+
+.logout-item:hover {
+    background-color: #fff5f5;
+    color: #f56c6c;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header {
+        padding: 0 16px;
+    }
+
+    .search-box {
+        margin: 0 20px;
+    }
+
+    .brand-name {
+        font-size: 16px;
+    }
+
+    .user-welcome {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
 }
 </style>
-
-<!-- <template>
-    <div class="layout-header-container" :style="{ opacity: 0.8 }">
-        <div class="layout-header-left">
-            <img class="layout-header-left-img" src="../../assets/logo.png" alt="">
-            <h4 class="layout-header-left-title ml-3">onlinevideo</h4>
-        </div>
-        <div class="layout-header-right">
-            <button type="button" class="btn btn-light" @click="onLogout">退出</button>
-        </div>
-        
-    </div>
-</template>
-
-<script setup>
-import { useRouter } from 'vue-router'
-const router = useRouter()
-
-const onLogout = () => {
-    localStorage.removeItem('token')
-    router.push('/login')
-}
-</script>
-
-<style lang="less" scoped>
-.layout-header-container {
-    height: 60px;
-    border-bottom: 1px solid #eaeaea;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 0.5rem;
-    background-color: #c7bfbf;
-
-    .layout-header-left {
-        display: flex;
-        align-items: center;
-        color: #fff;
-    }
-}
-
-.layout-header-left-img {
-    height: 50px;
-}
-
-.layout-header-right {
-    .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 6px;
-        background-color: #5f9ea0;
-        color: #fff;
-    }
-
-    .btn:hover {
-
-        color: #999;
-        opacity: 0.5;
-        background-color: #fff;
-    }
-}
-</style> -->
-
-<!-- <template>
-    <div class="indexHeader">
-        <div class="layout-header-left">
-            <h4>onlinevideo</h4>
-        </div>
-        <div class="layout-header-middle">
-            <el-input placeholder="请输入内容"  clearable
-                />
-            <el-button type="primary" >搜索</el-button>
-        </div>
-        <div class="layout-header-right">
-
-        </div>
-
-    </div>
-</template>
-
-<script setup>
-
-</script>
-
-<style scoped>
-.indexHeader {
-    height: 60px;
-    display: flex;
-    /* justify-content: space-between; */
-    align-items: center;
-    padding: 0 0.5rem;
-    background-color: aquamarine;
-}
-
-.font-color {
-    color: #000000;
-}
-</style> -->

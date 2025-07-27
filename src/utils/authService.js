@@ -1,9 +1,10 @@
 import axios from "axios";
 import { ElMessage } from 'element-plus';
 
-// const backendAddress = `https://localhost`      // 你的 API 基础 URL
-// const backendAddress = `https://192.168.1.10`      // 你的 API 基础 URL
-const backendAddress = `http://114.132.173.236`
+// const backendAddress = `http://localhost`      // 你的 API 基础 URL
+// const backendAddress = `http://192.168.1.1`      // 你的 API 基础 URL
+// const backendAddress = `http://114.132.173.236`
+const backendAddress = `https://online-video.online`
 
 const http = axios.create({
     baseURL: backendAddress,

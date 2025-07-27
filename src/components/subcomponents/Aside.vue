@@ -1,7 +1,7 @@
 <template>
     <div>
         <el-container style="height: 300px; border: 1px solid #eee">
-            <el-aside width="150px" style="background-color: white">
+            <el-aside width="180px" style="background-color: white">
                 <el-menu  :default-active="activeIndex" @select="handleSelect">
                         <el-menu-item-group>
 

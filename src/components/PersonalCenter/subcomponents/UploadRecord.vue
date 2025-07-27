@@ -2,7 +2,7 @@
     <el-divider content-position="center">历史专辑</el-divider>
 
     <el-card>
-        <el-table :data="albumData" style="width: 99%" max-height="250" border stripe>
+        <el-table :data="albumData" style="width: 99%" max-height="330" border stripe>
             <el-table-column fixed="left" prop="videoAlbumId" label="专辑id" width="70" />
             <el-table-column prop="videoAlbumName" label="专辑名" width="120" header-align="center" />
             <el-table-column prop="videoReleaseDate" label="上映日期" width="100" show-overflow-tooltip />
@@ -123,7 +123,7 @@
     <el-divider content-position="center">历史视频</el-divider>
 
     <el-card>
-        <el-table :data="videoData" style="width: 99%;" max-height="240" border stripe>
+        <el-table :data="videoData" style="width: 99%;" max-height="330" border stripe>
             <el-table-column fixed="left" width="50" property="videoId" label="id" header-align="center" />
             <el-table-column width="180" property="videoName" label="视频名称" header-align="center" />
             <el-table-column property="videoTitle" label="标题" header-align="center" />
@@ -163,7 +163,7 @@
                         </template>
                     </el-popconfirm>
                     <el-button link type="primary"
-                        @click="getDanmakus(scope.row); getComments(); dialogComment = true;">评论</el-button>
+                        @click="getDanmakus(scope.row); getComments(); dialogComment = true;pageNum=1">评论</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -284,7 +284,7 @@ export default {
             commentData: [],                           //  评论
             danmakuData: null,                           //  弹幕
             pageNum: 1,                                  //  每次请求的页数
-            pageSize: 3,                                 //  每次请求的大小
+            pageSize: 10,                                 //  每次请求的大小
             isLoading: false,                            //  是否正在请求
         }
     },
@@ -602,6 +602,7 @@ export default {
                     videoCommentTime: item.videoCommentTime
                 }))
                 this.commentData = [...this.commentData, ...newCommentData]
+                
             }
             this.isLoading = false
             this.pageNum++

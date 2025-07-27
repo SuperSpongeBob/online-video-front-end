@@ -102,62 +102,33 @@
                 </el-table>
 
                 <el-divider content-position="center">展示页面</el-divider>
-
-
-
-                <el-space direction="vertical" alignment="flex-start">
-                    <el-skeleton style="width: 240px" :loading="loading" animated>
-                        <template #template>
-                            <el-skeleton-item variant="image" style="width: 240px; height: 240px" />
-                            <div style="padding: 10px">
-                                <el-skeleton-item variant="h3" style="width: 50%" />
-                                <div style="display: flex;
-                                            align-items: center;
-                                            justify-items: space-between;
-                                            margin-top: 16px;
-                                            height: 16px;">
-                                    <el-skeleton-item variant="text" style="margin-right: 16px" />
-                                    <el-skeleton-item variant="text" style="width: 30%" />
-                                </div>
+                <!-- 替换为如下内容 -->
+                <div class="video-grid" style="margin-bottom: 16px;">
+                    <div class="video-card" style="width: 280px;">
+                        <!-- VIP/免费标签 -->
+                        <div :class="['video-badge', video.videoIsVip == 2 ? 'vip' : 'free']">
+                            {{ video.videoIsVip == 2 ? "VIP" : "免费" }}
+                        </div>
+                        <!-- 视频缩略图 -->
+                        <div class="video-thumbnail">
+                            <img :src="thumbnailUrl" @load="handleImage" alt="视频缩略图" />
+                        </div>
+                        <!-- 视频信息 -->
+                        <div class="video-info">
+                            <div class="video-title">{{ video.videoName }}</div>
+                            <div class="video-description">{{ video.videoTitle }}</div>
+                            <div class="video-tags">
+                                <span class="video-tag">{{ videoAlbum.videoChannel || '未知分类' }}</span>
+                                <span class="video-tag">{{ video.videoIsVip == 2 ? 'VIP专享' : '免费观看' }}</span>
                             </div>
-                        </template>
-                        <template #default>
-                            <el-card :body-style="{ padding: '0px', marginBottom: '1px' }"
-                                style="width: 240px; height: 250px; margin: 5px;position:relative">
-                                <div v-if="!loading" :style="{
-                                    position: 'absolute',
-                                    top: '8px',
-                                    right: '8px',
-                                    padding: '2px 6px',
-                                    borderRadius: '4px',
-                                    fontSize: '14px',
-                                    color: 'white',
-                                    backgroundColor: video.videoIsVip == 2 ? '#EC2828' : '#33CD00'
-                                }">
-                                    {{ video.videoIsVip == 2 ? "VIP" : "免费" }}
-                                </div>
-                                <div style="height: 180px;display: flex;justify-content: center;align-items:start;">
-                                    <img class="image" :src="this.thumbnailUrl"
-                                        style="max-width: 240px; height: 180px;background: #f0f0f0;"
-                                        @load="handleImage" />
-                                </div>
-                                <div style="padding: 4px; padding-top: 0px">
-                                    <div class="bottom card-header"
-                                        style="margin-bottom: 8px;font-size: larger;font-weight: bold;">
-                                        {{ video.videoName }}
-                                    </div>
-                                    {{ video.videoTitle }}
-                                </div>
-                            </el-card>
-
-                        </template>
-                    </el-skeleton>
-                    <el-upload ref="imageUpload" :auto-upload="false" :on-change="ChangeVideoThumbnail" multiple
-                        :limit="1" accept="image/*">
-                        <el-button slot="trigger" type="primary">选择视频封面</el-button>
-                    </el-upload>
-                    <el-button v-if="videoUrl" @click="this.dialogVideo = true" type="primary">从视频中截取封面</el-button>
-                </el-space>
+                        </div>
+                    </div>
+                </div>
+                <el-upload ref="imageUpload" :auto-upload="false" :on-change="ChangeVideoThumbnail" multiple :limit="1"
+                    accept="image/*">
+                    <el-button slot="trigger" type="primary">选择视频封面</el-button>
+                </el-upload>
+                <el-button v-if="videoUrl" @click="this.dialogVideo = true" type="primary">从视频中截取封面</el-button>
                 <!-- 视频预览 & 缩略图选择 -->
                 <el-dialog v-model="dialogVideo">
                     <video ref="videoPlayer" :src="videoUrl" controls @loadedmetadata="onVideoLoaded"
@@ -192,6 +163,7 @@ import axios from "axios";
 import { ElUpload, ElProgress, ElMessage } from "element-plus";
 import { ref } from "vue";
 import authService from "../../utils/authService";
+import '../../assets/videoCard.css'
 
 export default {
     components: {

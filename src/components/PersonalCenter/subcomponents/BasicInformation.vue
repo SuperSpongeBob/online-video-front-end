@@ -1,5 +1,5 @@
 <template>
-    <h4 class="text-center">基本信息</h4>
+    <el-divider content-position="center">基本信息</el-divider>
     <el-container>
         <el-main>
             <el-card style="width: 400px;margin:0 auto;">

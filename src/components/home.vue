@@ -5,11 +5,11 @@
       <el-table-column prop="address" label="Address" />
     </el-table>
 
-    <!-- <video ref="videoRef"
-                    id="myVideo" controls muted controlsList="nodownload" src="http://192.168.1.1/download/动漫/斩神第一集.mp4" autofocus
+    <video ref="videoRef"
+                    id="myVideo" controls muted controlsList="nodownload" src="http://192.168.1.1/api/video/play?videoId=27" autofocus
                     style="width: 100%; max-height: 75vh;object-fit: contain;">
                     您的浏览器不支持视频播放。
-                </video> -->
+                </video>
     127
     <!-- <img src="http://127.0.0.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
     1

@@ -158,7 +158,7 @@
                         <el-input v-model="dialogVideoData.videoName" placeholder="名称" clearable />
                     </el-form-item>
                     <el-form-item label="视频标题">
-                        <el-input v-model="dialogVideoData.videoTitle" maxlength="100" placeholder="标题" clearable />
+                        <el-input v-model="dialogVideoData.videoTitle" maxlength="200" placeholder="标题" clearable />
                     </el-form-item>
                     <el-form-item label="视频类型">
                         <el-select v-model="dialogVideoData.videoIsVip" placeholder="视频类型" clearable>

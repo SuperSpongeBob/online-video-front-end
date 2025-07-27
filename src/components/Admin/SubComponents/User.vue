@@ -17,9 +17,9 @@
                     </el-form-item>
                     <el-form-item label="身份">
                         <el-select v-model="this.queryUser.roleId" placeholder="身份" clearable>
-                            <el-option label="用户" value="0" />
-                            <el-option label="会员" value="1" />
-                            <el-option label="管理员" value="2" />
+                            <el-option label="用户" value="1" />
+                            <el-option label="会员" value="2" />
+                            <el-option label="管理员" value="3" />
                         </el-select>
                     </el-form-item>
 
