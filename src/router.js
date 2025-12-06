@@ -6,7 +6,7 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         { path: '/', redirect: '/login' },
-        { path: '/login',name:'Login', component: () => import('./components/Login.vue') },
+        { path: '/login', name: 'Login', component: () => import('./components/Login.vue') },
         { path: '/register', component: () => import('./components/Register.vue') },
         { path: '/forgetPassword', component: () => import('./components/ForgetPassword.vue') },
         { path: '/home', component: () => import('./components/home.vue') },
@@ -14,7 +14,7 @@ const router = createRouter({
         { path: '/history', component: () => import('./components/PersonalCenter/subcomponents/History.vue') },
         { path: '/videoUpload', component: () => import('./components/subcomponents/VideoUpload.vue') },
         {
-            path: '/index',name:'index', component: () => import('./components/Index.vue'), redirect: '/index/videoList', children: [
+            path: '/index', name: 'index', component: () => import('./components/Index.vue'), redirect: '/index/videoList', children: [
                 {
                     path: 'videoList',
                     component: { render: () => h(RouterView) },
@@ -63,8 +63,8 @@ const router = createRouter({
             ]
         },
         {
-            path: '/personalCenterIndex', name: 'personalCenterIndex', component: () => import('./components/PersonalCenter/PersonalCenterIndex.vue'), 
-            meta:{requireAuth:true,requiredRoles:['ROLE_USER','ROLE_VIP','ROLE_ADMIN']},
+            path: '/personalCenterIndex', name: 'personalCenterIndex', component: () => import('./components/PersonalCenter/PersonalCenterIndex.vue'),
+            meta: { requireAuth: true, requiredRoles: ['ROLE_USER', 'ROLE_VIP', 'ROLE_ADMIN'] },
             redirect: '/personalCenterIndex/basicInformation', children: [
                 {
                     path: 'basicInformation',
@@ -121,7 +121,7 @@ const router = createRouter({
 
 
         {
-            path: '/admin', name: 'Admin', component: () => import('./components/Admin/Index.vue'), meta:{requireAuth:true,requiredRoles:['ROLE_ADMIN']}, redirect: '/Admin/User',
+            path: '/admin', name: 'Admin', component: () => import('./components/Admin/Index.vue'), meta: { requireAuth: true, requiredRoles: ['ROLE_ADMIN'] }, redirect: '/Admin/User',
             children: [
                 {
                     path: 'User', name: 'User',
@@ -162,11 +162,11 @@ router.beforeEach((to, from, next) => {
     const isLoggedIn = userStore.isLoggedIn
     const requiredRoles = to.meta.requiredRoles || []
 
-    if(to.meta.requireAuth && !isLoggedIn){
-        next({name:'Login'})
-    }else if(requiredRoles.length>0&&!requiredRoles.some(role=>userStore.roles.includes(role))){
-        next({name:'index'})
-    }else{
+    if (to.meta.requireAuth && !isLoggedIn) {
+        next({ name: 'Login' })
+    } else if (requiredRoles.length > 0 && !requiredRoles.some(role => userStore.roles.includes(role))) {
+        next({ name: 'index' })
+    } else {
         next()
     }
 

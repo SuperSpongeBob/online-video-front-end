@@ -1,17 +1,17 @@
 <template>
     <el-table v-loading="loading" :data="tableData" style="width: 100%">
-      <el-table-column prop="date" label="Date" width="180" />
-      <el-table-column prop="name" label="Name" width="180" />
-      <el-table-column prop="address" label="Address" />
+        <el-table-column prop="date" label="Date" width="180" />
+        <el-table-column prop="name" label="Name" width="180" />
+        <el-table-column prop="address" label="Address" />
     </el-table>
 
-    <video ref="videoRef"
-                    id="myVideo" controls muted controlsList="nodownload" src="http://192.168.1.1/api/video/play?videoId=27" autofocus
-                    style="width: 100%; max-height: 75vh;object-fit: contain;">
-                    您的浏览器不支持视频播放。
-                </video>
+    <video ref="videoRef" id="myVideo" controls muted controlsList="nodownload"
+        src="http://192.168.1.1/api/video/play?videoId=27" autofocus
+        style="width: 100%; max-height: 75vh;object-fit: contain;">
+        您的浏览器不支持视频播放。
+    </video>
     127
-    <!-- <img src="http://127.0.0.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
+    <img src="http://127.0.0.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
     1
     <img src="http://192.168.1.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
     10
@@ -22,47 +22,48 @@
     s1
     <img src="https://192.168.1.1/images/Stolen.png" style="max-width: 240px; height: 180px;">
     s10
-    <img src="https://192.168.1.10/images/Stolen.png" style="max-width: 240px; height: 180px;"> -->
-    <el-button @click="loading=!loading">switch</el-button>
+    <img src="https://192.168.1.10/images/Stolen.png" style="max-width: 240px; height: 180px;">
+    <el-button @click="loading = !loading">switch</el-button>
     <el-button @click="getlocal">getlocal</el-button>
-  </template>
-  
-  <script lang="ts" setup>
+</template>
+
+<script lang="ts" setup>
 import axios from 'axios';
 import { ref } from 'vue'
-  const loading = ref(false)
-  
-  const tableData = [
+const loading = ref(false)
+
+const tableData = [
     {
-      date: '2016-05-02',
-      name: 'John Smith',
-      address: 'No.1518,  Jinshajiang Road, Putuo District',
+        date: '2016-05-02',
+        name: 'John Smith',
+        address: 'No.1518,  Jinshajiang Road, Putuo District',
     },
     {
-      date: '2016-05-04',
-      name: 'John Smith',
-      address: 'No.1518,  Jinshajiang Road, Putuo District',
+        date: '2016-05-04',
+        name: 'John Smith',
+        address: 'No.1518,  Jinshajiang Road, Putuo District',
     },
     {
-      date: '2016-05-01',
-      name: 'John Smith',
-      address: 'No.1518,  Jinshajiang Road, Putuo District',
+        date: '2016-05-01',
+        name: 'John Smith',
+        address: 'No.1518,  Jinshajiang Road, Putuo District',
     },
-  ]
-const getlocal = async() => {
-    const response =await axios.get("http://192.168.1.1/images/Stolen.png")
+]
+const getlocal = async () => {
+    const response = await axios.get("http://192.168.1.1/images/Stolen.png")
     console.log(response)
 };
-  </script>
-  
-  <style>
-  body {
+</script>
+
+<style>
+body {
     margin: 0;
-  }
-  .example-showcase .el-loading-mask {
+}
+
+.example-showcase .el-loading-mask {
     z-index: 9;
-  }
-  </style>
+}
+</style>
 
 <!-- <template>
     <el-card style="max-width: 480px">

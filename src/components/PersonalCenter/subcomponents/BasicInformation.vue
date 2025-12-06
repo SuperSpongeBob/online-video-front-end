@@ -38,7 +38,7 @@ export default {
 
     methods: {
         //  格式化时间
-        formatDate:formatDate,
+        formatDate: formatDate,
 
         //  从localStorage获取用户信息
         async userInfo() {

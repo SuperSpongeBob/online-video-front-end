@@ -23,20 +23,20 @@ import NavLeft from './NavLeft.vue';
 
 <style lang="less" scoped>
 .index-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  
-  .index-main-box {
     height: 100%;
     display: flex;
+    flex-direction: column;
 
-    .index-main-body {
-      padding: 15px;
-      width: 80%;
-      flex: 1;
-      
+    .index-main-box {
+        height: 100%;
+        display: flex;
+
+        .index-main-body {
+            padding: 15px;
+            width: 80%;
+            flex: 1;
+
+        }
     }
-  }
 }
 </style>

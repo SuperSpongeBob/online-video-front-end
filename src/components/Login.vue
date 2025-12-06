@@ -7,10 +7,10 @@
                     <span>登录</span>
                 </div>
             </template>
-            
+
             <el-form ref="formRef" :model="user" :rules="validationRules" label-width="120px">
                 <el-form-item label="账号" prop="userPhone">
-                    <el-input v-model="user.userPhone" placeholder="请输入手机号" autocomplete="new-password"/>
+                    <el-input v-model="user.userPhone" placeholder="请输入手机号" autocomplete="new-password" />
                 </el-form-item>
                 <el-form-item label="密码" prop="userPassword">
                     <el-input type="password" v-model="user.userPassword" placeholder="请输入密码" show-password />
@@ -25,23 +25,22 @@
                     <el-button style="width: 180px;" type="primary" round @click="submit">登录</el-button>
                 </div>
                 <div style="margin: 2vh;display: flex;justify-content: center;">
-                    <el-button link  type="info"  @click="this.$router.push('/forgetPassword')">忘记密码？</el-button>
+                    <el-button link type="info" @click="this.$router.push('/forgetPassword')">忘记密码？</el-button>
                 </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <el-button link type="primary" @click="this.$router.push('/index')">
-                            <el-icon>
-                                <Back />
-                            </el-icon>首页
-                        </el-button>
+                <div style="display: flex; justify-content: space-between;">
+                    <el-button link type="primary" @click="this.$router.push('/index')">
+                        <el-icon>
+                            <Back />
+                        </el-icon>首页
+                    </el-button>
 
-                        <el-button link  type="primary"
-                            @click="this.$router.push('/register')">
-                            注册<el-icon>
-                                <Right />
-                            </el-icon>
-                        </el-button>
-                    </div>
-                
+                    <el-button link type="primary" @click="this.$router.push('/register')">
+                        注册<el-icon>
+                            <Right />
+                        </el-icon>
+                    </el-button>
+                </div>
+
             </el-form>
         </el-card>
 
@@ -61,8 +60,8 @@ export default {
                 userPassword: "admin123"
             },
             loginType: 'user',
-            formRef:null,
-            
+            formRef: null,
+
             validationRules: {
                 userPhone: [
                     { required: true, message: "手机号码不能为空", trigger: "blur" },
@@ -78,45 +77,45 @@ export default {
     },
     methods: {
         async submit() {
-            this.$refs.formRef.validate(valid=>{
-                if(valid){
+            this.$refs.formRef.validate(valid => {
+                if (valid) {
                     authService.login({ userPhone: this.user.userPhone, userPassword: this.user.userPassword })
-                    .then(response=>{
-                        const {data} = response
-                        if(data.success){
-                            // localStorage.setItem('VideoToken', data.token)
-                            // localStorage.setItem('userInfo', JSON.stringify(data))
-                            // localStorage.setItem("LoginState", true)
-                            const userStore = useUserStore()
-                            userStore.login(data)
-                            
-                            if (this.loginType == 'admin' && data.roles[0] == "ROLE_ADMIN") {
-                                const loading = ElLoading.service({
-                                    lock: true,
-                                    text: 'Loading',
-                                    background: 'rgba(0,0,0,0.7)'
-                                })
-                                setTimeout(() => {
-                                    loading.close()
-                                    this.$notify.success({title:`尊敬的管理员`,message:'欢迎来到后台管理系统'})
-                                    this.$router.push('/admin')
-                                }, 1000)
-                                return
+                        .then(response => {
+                            const { data } = response
+                            if (data.success) {
+                                // localStorage.setItem('VideoToken', data.token)
+                                // localStorage.setItem('userInfo', JSON.stringify(data))
+                                // localStorage.setItem("LoginState", true)
+                                const userStore = useUserStore()
+                                userStore.login(data)
+
+                                if (this.loginType == 'admin' && data.roles[0] == "ROLE_ADMIN") {
+                                    const loading = ElLoading.service({
+                                        lock: true,
+                                        text: 'Loading',
+                                        background: 'rgba(0,0,0,0.7)'
+                                    })
+                                    setTimeout(() => {
+                                        loading.close()
+                                        this.$notify.success({ title: `尊敬的管理员`, message: '欢迎来到后台管理系统' })
+                                        this.$router.push('/admin')
+                                    }, 1000)
+                                    return
+                                }
+                                this.$message.success({ message: `${data.message}`, showClose: true })
+                                this.$notify.success({ title: `尊敬的用户`, message: '您已登录成功', position: 'bottom-right', })
+                                this.$router.push("/index")
+                            } else {
+                                this.$message.error({ message: `${data.message}`, showClose: true })
                             }
-                            this.$message.success({message:`${data.message}`,showClose:true})
-                            this.$notify.success({title:`尊敬的用户`,message:'您已登录成功',position: 'bottom-right',})
-                            this.$router.push("/index")
-                        }else{
-                            this.$message.error({message:`${data.message}`,showClose:true})
-                        }
-                    })
-                    .catch(error=>{
-                        if(error.response){
-                            this.$message.error({message:`${error.response.data.message}`||'登录失败',showClose:true})
-                        }else{
-                            this.$message.error({message:`网络错误，请稍后重试`,showClose:true})
-                        }
-                    })
+                        })
+                        .catch(error => {
+                            if (error.response) {
+                                this.$message.error({ message: `${error.response.data.message}` || '登录失败', showClose: true })
+                            } else {
+                                this.$message.error({ message: `网络错误，请稍后重试`, showClose: true })
+                            }
+                        })
                 }
             })
         },

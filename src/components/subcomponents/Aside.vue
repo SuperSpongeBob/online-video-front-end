@@ -2,34 +2,34 @@
     <div>
         <el-container style="height: 300px; border: 1px solid #eee">
             <el-aside width="180px" style="background-color: white">
-                <el-menu  :default-active="activeIndex" @select="handleSelect">
-                        <el-menu-item-group>
+                <el-menu :default-active="activeIndex" @select="handleSelect">
+                    <el-menu-item-group>
 
-                            <router-link class="alink" to="/index/videoList">
-                                <el-menu-item index="1-1">
-                                    首页
-                                </el-menu-item>
+                        <router-link class="alink" to="/index/videoList">
+                            <el-menu-item index="1-1">
+                                首页
+                            </el-menu-item>
 
-                            </router-link>
+                        </router-link>
 
-                            <router-link class="alink" to="/index/recommend">
-                                <el-menu-item index="1-2">
-                                    推荐
-                                </el-menu-item>
-                            </router-link>
+                        <router-link class="alink" to="/index/recommend">
+                            <el-menu-item index="1-2">
+                                推荐
+                            </el-menu-item>
+                        </router-link>
 
-                            <router-link class="alink" to="/index/memberZone">
-                                <el-menu-item index="1-3">
-                                    会员专区
-                                </el-menu-item>
-                            </router-link>
+                        <router-link class="alink" to="/index/memberZone">
+                            <el-menu-item index="1-3">
+                                会员专区
+                            </el-menu-item>
+                        </router-link>
 
-                            <router-link class="alink" to="/index/freeZone">
-                                <el-menu-item index="1-4">
-                                    免费专区
-                                </el-menu-item>
-                            </router-link>
-                        </el-menu-item-group>
+                        <router-link class="alink" to="/index/freeZone">
+                            <el-menu-item index="1-4">
+                                免费专区
+                            </el-menu-item>
+                        </router-link>
+                    </el-menu-item-group>
                 </el-menu>
             </el-aside>
         </el-container>
@@ -40,13 +40,13 @@
 export default {
     data() {
         return {
-            activeIndex:sessionStorage.getItem('activeMenu') || '1-1'
+            activeIndex: sessionStorage.getItem('activeMenu') || '1-1'
         }
     },
-    methods:{
-        handleSelect(index){
+    methods: {
+        handleSelect(index) {
             this.activeIndex = index
-            sessionStorage.setItem('activeMenu',index)
+            sessionStorage.setItem('activeMenu', index)
         }
     }
 }

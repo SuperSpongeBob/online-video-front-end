@@ -9,8 +9,8 @@ import { tsParticles } from "tsparticles-engine";
 import eventBus from '../utils/eventBus';
 
 // const isParticlesRunning = ref(true)
-// 从 localStorage 中获取开关状态，默认为 true
-const isParticlesRunning = ref(localStorage.getItem('switch') === null ? true : localStorage.getItem('switch') === 'true');
+// 从 localStorage 中获取开关状态，默认为 false
+const isParticlesRunning = ref(localStorage.getItem('switch') === null ? false : localStorage.getItem('switch') === 'true');
 
 let particlesInstance;
 
@@ -115,25 +115,25 @@ const particlesInit = async () => {
             },
         },
     });
-    isParticlesRunning.value=true
+    isParticlesRunning.value = true
 };
 
 const handleCloseParticles = () => {
     if (particlesInstance) {
         particlesInstance.destroy();
-        isParticlesRunning.value=false;
-        localStorage.setItem('seitch','false')
+        isParticlesRunning.value = false;
+        localStorage.setItem('switch', 'false')
     }
 };
 const handleOpenParticles = async () => {
     if (!isParticlesRunning.value) {
         await particlesInit();
-        localStorage.setItem('switch','true')
+        localStorage.setItem('switch', 'true')
     }
 };
 
 onMounted(async () => {
-    if(isParticlesRunning.value){
+    if (isParticlesRunning.value) {
         await particlesInit()
     }
     eventBus.on('close-particles', handleCloseParticles);

@@ -3,8 +3,8 @@
         <el-col :span="12">
             <el-container style="height: 600px; border: 1px solid #eee">
                 <el-aside width="220px" style="background-color: white">
-                    <el-menu :default-active="activeIndex" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose"
-                        @select="handleSelect">
+                    <el-menu :default-active="activeIndex" class="el-menu-vertical-demo" @open="handleOpen"
+                        @close="handleClose" @select="handleSelect">
                         <el-sub-menu index="1">
                             <template #title>
                                 <el-icon>

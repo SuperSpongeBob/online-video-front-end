@@ -48,7 +48,9 @@
 
                     <el-form-item>
                         <el-button type="primary" @click="query">筛选</el-button>
+                        <el-button @click="resetQuery" style="margin-left: 8px;">清空</el-button>
                     </el-form-item>
+
                 </el-form>
             </el-collapse-item>
         </el-collapse>
@@ -199,28 +201,28 @@ export default {
             //     this.$message.success({ message: '更新用户成功', showClose: true })
             // } else {
             //     this.$message.error({ message: '更新失败', showClose: true })
-        // }
+            // }
 
             authService.adminUpdateUser(this.dialogUserData)
-            .then(response=>{
-                const {data} = response
-                if(data.success){
-                    let userItem = this.queryData.find(item=>item.userId==(this.dialogUserData.userId))     //  根据用户Idzhaodoa数据
-                    Object.assign(userItem,this.dialogUserData)                                             //  将数据替换
-                    this.dialogUserData.roleId = String(this.dialogUserData.roleId)                     //  将identify字符串化
-                    this.$message.success({message:`${data.message}`,showClose:true})
-                }else{
-                    this.$message.error({message:`${data.message}`,showClose:true})
-                }
-            })
-            .catch(error=>{
-                if(error.response){
-                    this.$message.error({message:`${error.response.data.message}`||'更新用户失败',showClose:true})
-                }else{
-                    this.$message.error({message:`网络错误，请稍后重试`,showClose:true})
-                }
-            })
-            
+                .then(response => {
+                    const { data } = response
+                    if (data.success) {
+                        let userItem = this.queryData.find(item => item.userId == (this.dialogUserData.userId))     //  根据用户Idzhaodoa数据
+                        Object.assign(userItem, this.dialogUserData)                                             //  将数据替换
+                        this.dialogUserData.roleId = String(this.dialogUserData.roleId)                     //  将identify字符串化
+                        this.$message.success({ message: `${data.message}`, showClose: true })
+                    } else {
+                        this.$message.error({ message: `${data.message}`, showClose: true })
+                    }
+                })
+                .catch(error => {
+                    if (error.response) {
+                        this.$message.error({ message: `${error.response.data.message}` || '更新用户失败', showClose: true })
+                    } else {
+                        this.$message.error({ message: `网络错误，请稍后重试`, showClose: true })
+                    }
+                })
+
         },
 
         //  编辑按钮点击时
@@ -257,6 +259,18 @@ export default {
 
             this.queryUsers()
         },
+        resetQuery() {
+            // 重置所有查询条件
+            this.queryUser = {
+                UserId: '',
+                userName: '',
+                userGender: '',
+                pageNum: 1,
+                pageSize: 15,
+                isLoading: false
+            };
+            this.dateRange = null;
+        },
 
         //  根据条件查询用户信息
         async queryUsers() {
@@ -266,7 +280,7 @@ export default {
                 this.queryUser.isLoading = true
                 let startTime = null
                 let endTime = null;
-                if (this.dateRange &&this.dateRange.length == 2) {
+                if (this.dateRange && this.dateRange.length == 2) {
                     startTime = new Date(this.dateRange[0]).getTime();
                     endTime = new Date(this.dateRange[1]).getTime();
                     console.log(startTime + "+" + endTime)
@@ -274,7 +288,7 @@ export default {
                 console.log(this.queryUser)
                 // return
                 // const response = await axios.post('http://localhost:8080/admin/users', this.queryUser)
-                const response = await authService.adminUsers(this.queryUser,startTime,endTime)
+                const response = await authService.adminUsers(this.queryUser, startTime, endTime)
                 console.log(response)
                 if (response.data != '' && response.data != null) {
                     const formattedNewUserData = response.data.map(item => ({

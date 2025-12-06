@@ -23,11 +23,11 @@
 
                 <div class="info">
                     <h3>{{ video.videoName }}</h3>
-                    <span>{{ video.videoTitle }}</span>
+                    <span style="font-size: 12px; color: #999; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">{{ video.videoTitle }}</span>
                     <div class="meta">
                         <time class="time">{{ formatDate(video.timestamp) }}</time>
                     </div>
-                    
+
                 </div>
 
                 <div class="optional">
@@ -60,7 +60,7 @@ export default {
         continueToWatch(video) {
             console.log(video.historyId)
             localStorage.setItem("historyId", video.historyId)
-            window.open(`${window.location.origin}/videoPlay?movieId=${video.videoId}&VIP=${video.videoIsVip}&videoName=${video.videoName}&videoTitle=${video.videoTitle}`);
+            window.open(`${window.location.origin}/videoPlay?movieId=${video.videoId}`);
         },
 
         async getHistory() {
@@ -82,7 +82,7 @@ export default {
             console.log(video)
             const history = {
                 historyId: video.historyId,
-                userId:video.userId
+                userId: video.userId
             }
             console.log(history)
             const response = await authService.deleteHistory(history)
@@ -105,7 +105,7 @@ export default {
         },
 
         //  格式化时间戳
-        formatDate:formatDate,
+        formatDate: formatDate,
 
         // 清空历史
         async clearHistory() {

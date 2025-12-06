@@ -57,7 +57,7 @@
                     <el-table-column prop="videoPath" label="视频路径" width="160" show-overflow-tooltip />
                     <el-table-column prop="videoTitle" label="视频标题" show-overflow-tooltip />
                     <el-table-column prop="videoApprovalStatus" label="视频状态" width="100" show-overflow-tooltip />
-                    <el-table-column prop="viewCount" label="播放量" width="80" show-overflow-tooltip/>
+                    <el-table-column prop="viewCount" label="播放量" width="80" show-overflow-tooltip />
                     <el-table-column prop="duration" label="视频时长" width="90" show-overflow-tooltip>
                         <template #default="{ row }">
                             {{ formatDuration(row.duration) }}
@@ -87,7 +87,8 @@
                                         </el-icon>
                                     </template>
                                 </el-popconfirm>
-                                <el-button link type="primary" @click="getDanmakus(scope.row); getComments();dialogComment=true">评论＆弹幕</el-button>
+                                <el-button link type="primary"
+                                    @click="getDanmakus(scope.row); getComments(); dialogComment = true">评论＆弹幕</el-button>
                             </div>
                         </template>
                     </el-table-column>
@@ -116,34 +117,34 @@
             </el-dialog>
 
             <el-dialog v-model="dialogComment" draggable width="800">
-        <p>评论</p>
-        <el-table :data="commentData" height="250" @scroll.capture="handleScroll($event, 'dialogComment')">
-            <el-table-column property="videoCommentId" label="评论Id" width="120" />
-            <el-table-column property="userName" label="用户名" width="150" />
-            <el-table-column property="videoCommentContent" label="评论内容" />
-            <el-table-column property="videoCommentTime" label="评论时间" width="200" />
-            <el-table-column fixed="right" label="Operations" min-width="120">
-                <template #default="scope">
-                    <el-button link type="primary" size="small" @click.prevent="deleteComment(scope)">
-                        Remove
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-        <p>弹幕</p>
-        <el-table :data="danmakuData" height="250">
-            <el-table-column property="danmakuId" label="弹幕Id" width="150" />
-            <el-table-column property="text" label="弹幕内容" width="200" />
-            <el-table-column property="time" label="出现时间" />
-            <el-table-column fixed="right" label="Operations" min-width="120">
-                <template #default="scope">
-                    <el-button link type="primary" size="small" @click.prevent="deleteDanmaku(scope)">
-                        Remove
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-    </el-dialog>
+                <p>评论</p>
+                <el-table :data="commentData" height="250" @scroll.capture="handleScroll($event, 'dialogComment')">
+                    <el-table-column property="videoCommentId" label="评论Id" width="120" />
+                    <el-table-column property="userName" label="用户名" width="150" />
+                    <el-table-column property="videoCommentContent" label="评论内容" />
+                    <el-table-column property="videoCommentTime" label="评论时间" width="200" />
+                    <el-table-column fixed="right" label="Operations" min-width="120">
+                        <template #default="scope">
+                            <el-button link type="primary" size="small" @click.prevent="deleteComment(scope)">
+                                Remove
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <p>弹幕</p>
+                <el-table :data="danmakuData" height="250">
+                    <el-table-column property="danmakuId" label="弹幕Id" width="150" />
+                    <el-table-column property="text" label="弹幕内容" width="200" />
+                    <el-table-column property="time" label="出现时间" />
+                    <el-table-column fixed="right" label="Operations" min-width="120">
+                        <template #default="scope">
+                            <el-button link type="primary" size="small" @click.prevent="deleteDanmaku(scope)">
+                                Remove
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-dialog>
 
             <el-dialog v-model="conterDialogVisible" title="编辑视频信息" width="500" draggable overflow align-center>
                 <el-form ref="dialogVideoData" :model="dialogVideoData" label-width="100px">
@@ -403,12 +404,12 @@ export default {
             tempVideoId: null,                           //  暂时存放用于查询评论内容的videoId
             commentData: [],                           //  评论
             danmakuData: null,                           //  弹幕
-            commentCondition:{
+            commentCondition: {
                 pageNum: 1,                                  //  每次请求的页数
                 pageSize: 6,                                 //  每次请求的大小
                 isLoading: false,                            //  是否正在请求
             },
-            
+
         }
     },
     methods: {
@@ -521,7 +522,7 @@ export default {
                 // console.log(row)
                 const result = await this.getVideos()
                 //  判断是否有数据，避免栈内存溢出
-                if (result.lenght != 0 || result!= undefined) {
+                if (result.lenght != 0 || result != undefined) {
                     this.nextVideo(row)
                     return
                 }
@@ -562,7 +563,7 @@ export default {
                 this.$message.warning({ message: '请先删除该专辑下的所有视频', showClose: true })
             }
             if (existsVideo.data == false) {
-                const videoAlbum = { videoAlbumId: row.videoAlbumId,userId:row.userId }
+                const videoAlbum = { videoAlbumId: row.videoAlbumId, userId: row.userId }
                 const response = await authService.deleteAlbum(videoAlbum)  //  删除专辑
                 if (response.status == 200) {
                     this.albumData = this.albumData.filter(item => item.videoAlbumId !== row.videoAlbumId)
@@ -671,7 +672,7 @@ export default {
                         videoPath: item.videoPath,
                         videoTitle: item.videoTitle,
                         duration: item.duration,
-                        viewCount:item.viewCount,
+                        viewCount: item.viewCount,
                         videoApprovalStatus: item.videoApprovalStatus,
                         thumbnailPath: this.backendAddress + '/images/' + item.thumbnailPath,
                         videoChannel: item.videoChannel
@@ -811,7 +812,7 @@ export default {
                     this.getVideos()
                 } else if (where == 'queryAlbum') {
                     this.getAlbums()
-                }else if(where == 'dialogComment'){
+                } else if (where == 'dialogComment') {
                     this.getComments();                         // 加载更多评论
                 }
             }

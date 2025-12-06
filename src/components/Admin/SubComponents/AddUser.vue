@@ -113,7 +113,7 @@ export default {
                         userPhone: this.form.userPhone,
                         userEmail: this.form.userEmail,
                         userPassword: this.form.userPassword,
-                        userGender:this.form.userGender,
+                        userGender: this.form.userGender,
                         roleId: this.form.userRole.roleId
                     }
                     const response = await authService.adminInsertUser(insertDate)

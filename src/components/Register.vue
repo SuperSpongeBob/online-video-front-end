@@ -1,13 +1,9 @@
 <template>
     <div style="max-width: 600px; margin: 0 auto;">
-    <el-alert 
-        style="width: 300px; margin: 0 auto; display:flex;justify-content:center;border-radius: 8px;" 
-        title="温馨提示：验证码由邮箱发送" 
-        type="warning" 
-        show-icon 
-    />
-</div>
-    
+        <el-alert style="width: 300px; margin: 0 auto; display:flex;justify-content:center;border-radius: 8px;"
+            title="温馨提示：验证码由邮箱发送" type="warning" show-icon />
+    </div>
+
     <div class="login-container">
         <el-card class="login-card">
             <template #header>
@@ -32,12 +28,12 @@
                     <el-input v-model="form.userPhone" placeholder="请输入手机号" autocomplete="new-password"></el-input>
                 </el-form-item>
                 <el-form-item label="密码" prop="userPassword">
-                    <el-input type="password" v-model="form.userPassword" placeholder="请输入密码" autocomplete="new-password"
-                        show-password></el-input>
+                    <el-input type="password" v-model="form.userPassword" placeholder="请输入密码"
+                        autocomplete="new-password" show-password></el-input>
                 </el-form-item>
                 <el-form-item label="确认密码" prop="confirmPassword">
-                    <el-input type="password" v-model="form.confirmPassword" placeholder="请再次输入密码" autocomplete="new-password"
-                        show-password></el-input>
+                    <el-input type="password" v-model="form.confirmPassword" placeholder="请再次输入密码"
+                        autocomplete="new-password" show-password></el-input>
                 </el-form-item>
                 <el-form-item label="验证码" prop="code">
                     <div class="code-input">
@@ -90,9 +86,9 @@ export default {
                 confirmPassword: "",
                 code: "",
             }),
-            formRef:ref(null),
-            countdown:0,
-            timer:null,
+            formRef: ref(null),
+            countdown: 0,
+            timer: null,
             validationRules: {
                 userName: [
                     { required: true, message: "用户名不能为空", trigger: "blur" },
@@ -125,66 +121,66 @@ export default {
         };
     },
     methods: {
-        getVerificationCode(){
-            if(!this.canGetCode)return
-            authService.registerCode({userPhone:this.form.userPhone,userEmail:this.form.userEmail})
-            .then(response=>{
-                console.log(response)
-                const {data} = response
-                if(data.success){
-                    this.$message.success({message:'验证码已发送',showClose:true})
-                    this.$notify.success({title:'邮箱验证码已发送',message:'验证码有效期为5分钟，失效请重新发送'})
-                    this.startCountdown()
-                }else{
-                    this.$message.error({message:`${data.message}`,showClose:true})
-                }
-            })
-            .catch(error=>{
-                if(error.response){
-                    this.$message.error({message:error.response.data.message||'发送验证码失败',showClose:true})
-                }else{
-                    console.error(error)
-                    this.$message.error({message:'网络错误，请稍后重试code',showClose:true})
-                }
-            })
+        getVerificationCode() {
+            if (!this.canGetCode) return
+            authService.registerCode({ userPhone: this.form.userPhone, userEmail: this.form.userEmail })
+                .then(response => {
+                    console.log(response)
+                    const { data } = response
+                    if (data.success) {
+                        this.$message.success({ message: '验证码已发送', showClose: true })
+                        this.$notify.success({ title: '邮箱验证码已发送', message: '验证码有效期为5分钟，失效请重新发送' })
+                        this.startCountdown()
+                    } else {
+                        this.$message.error({ message: `${data.message}`, showClose: true })
+                    }
+                })
+                .catch(error => {
+                    if (error.response) {
+                        this.$message.error({ message: error.response.data.message || '发送验证码失败', showClose: true })
+                    } else {
+                        console.error(error)
+                        this.$message.error({ message: '网络错误，请稍后重试code', showClose: true })
+                    }
+                })
         },
-        submitForm(){
-            this.$refs.formRef.validate(valid=>{
-                if(valid){
+        submitForm() {
+            this.$refs.formRef.validate(valid => {
+                if (valid) {
                     authService.registerInsert(this.form)
-                    .then(response=>{
-                        console.log(response)
-                        const {data} =response
-                        if(data.success){
-                            this.$message.success({message:`${data.message}`,showClose:true})
-                            this.$notify.success({title:'账号注册成功',message:'请返回登录页进行登录'})
-                        }else{
-                            this.$message.error({message:`${data.message}`,showClose:true})
-                        }
-                    })
-                    .catch(error=>{
-                        if(error.response){
-                            this.$message.error({message:`${error.response.data.message}`||'密码重置失败',showClose:true})
-                        }else{
-                            this.$message.error({message:'网络错误，请稍后重试register',showClose:true})
-                        }
-                    })
+                        .then(response => {
+                            console.log(response)
+                            const { data } = response
+                            if (data.success) {
+                                this.$message.success({ message: `${data.message}`, showClose: true })
+                                this.$notify.success({ title: '账号注册成功', message: '请返回登录页进行登录' })
+                            } else {
+                                this.$message.error({ message: `${data.message}`, showClose: true })
+                            }
+                        })
+                        .catch(error => {
+                            if (error.response) {
+                                this.$message.error({ message: `${error.response.data.message}` || '密码重置失败', showClose: true })
+                            } else {
+                                this.$message.error({ message: '网络错误，请稍后重试register', showClose: true })
+                            }
+                        })
                 }
             })
         },
-        startCountdown(){
-            this.countdown=60
-            this.timer=setInterval(()=>{
+        startCountdown() {
+            this.countdown = 60
+            this.timer = setInterval(() => {
                 this.countdown--
-                if(this.countdown<=0){
+                if (this.countdown <= 0) {
                     clearInterval(this.timer)
                 }
-            },1000)
+            }, 1000)
         },
     },
-    computed:{
-        canGetCode(){
-            return Boolean(this.form.userPhone&&this.form.userEmail)
+    computed: {
+        canGetCode() {
+            return Boolean(this.form.userPhone && this.form.userEmail)
         }
     }
 };
@@ -193,11 +189,11 @@ export default {
 
 <style scoped>
 .login-container {
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    z-index:1;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
     background-color: #f5f5f5;
 }
 
@@ -215,7 +211,7 @@ export default {
     gap: 20px;
 }
 
-.code-input .el-input{
+.code-input .el-input {
     flex: 1;
 }
 </style>

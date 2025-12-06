@@ -1,5 +1,5 @@
 <template>
-    <div class="video-grid-container custom-scrollbar" @scroll="handleScroll" style="height: 90%; overflow-y: auto;">
+    <div class="video-grid-container custom-scrollbar"@scroll="handleScroll" style="height: 90%; overflow-y: auto;">
         <div class="video-grid">
             <div v-for="movie in movies" :key="movie.videoId" class="video-card">
                 <!-- 加载骨架屏 -->
@@ -102,7 +102,13 @@ export default {
                 const response = await authService.getIndexVideos(this.req)
                 console.log(response)
                 if (response.status == 200) {
-                    const newMovies = response.data.map(item => {
+                    // 洗牌算法打乱顺序
+                    const shuffledData = response.data.slice();
+                    for (let i = shuffledData.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffledData[i], shuffledData[j]] = [shuffledData[j], shuffledData[i]];
+                    }
+                    const newMovies = shuffledData.map(item => {
                         if (item.thumbnailPath) {
                             return {
                                 ...item,
@@ -138,7 +144,7 @@ export default {
             }
         },
         goToMoviePage(movie) {
-            window.open(`${window.location.origin}/videoPlay?movieId=${movie.videoId}&VIP=${movie.videoIsVip}&videoName=${movie.videoName}&videoTitle=${movie.videoTitle}`);
+            window.open(`${window.location.origin}/videoPlay?movieId=${movie.videoId}`);
         },
         handleError(event) {
             event.target.src = fallbackImage

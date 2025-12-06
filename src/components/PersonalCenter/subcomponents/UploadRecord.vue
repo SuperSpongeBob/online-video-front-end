@@ -141,7 +141,7 @@
             <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
                 <template #default="scope">
                     <span :style="getStatusColor(scope.row.videoApprovalStatus)">{{ scope.row.videoApprovalStatus
-                        }}</span>
+                    }}</span>
                 </template>
             </el-table-column>
             <el-table-column property="thumbnailPath" label="缩略图" width="120" header-align="center">
@@ -163,7 +163,7 @@
                         </template>
                     </el-popconfirm>
                     <el-button link type="primary"
-                        @click="getDanmakus(scope.row); getComments(); dialogComment = true;pageNum=1">评论</el-button>
+                        @click="getDanmakus(scope.row); getComments(); dialogComment = true; pageNum = 1">评论</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -457,7 +457,7 @@ export default {
         //  根据专辑id查看详情视频信息
         async viewDetail(row) {
             this.video.videoAlbumId = row.videoAlbumId
-            // 过滤出 videoAlbumId 为 row.id 的数据并赋值给 popoverVideoData
+            // 过滤出 videoAlbumId 为 row.videoAlbumId 的数据并赋值给 popoverVideoData
             this.popoverVideoData = this.videoData.filter(item => item.videoAlbumId === row.videoAlbumId);
             console.log(row)
             console.log(this.popoverVideoData)
@@ -602,7 +602,7 @@ export default {
                     videoCommentTime: item.videoCommentTime
                 }))
                 this.commentData = [...this.commentData, ...newCommentData]
-                
+
             }
             this.isLoading = false
             this.pageNum++

@@ -2,37 +2,37 @@
     <el-divider content-position="center">信息修改</el-divider>
     <el-container>
         <el-main>
-            <el-card style="width: 400px;margin:0 auto;">            
-            <el-form ref="form" :model="form" :rules="validationRules" label-width="20%">
-                <el-form-item label="Id">
-                    <div>{{ form.userId }}</div>
-                </el-form-item>
-                <el-form-item label="姓名" prop="userName">
-                    <el-input v-model="form.userName"></el-input>
-                </el-form-item>
-                <el-form-item label="电话" prop="userPhone">
-                    <el-input v-model="form.userPhone"></el-input>
-                </el-form-item>
-                <el-form-item label="邮箱" prop="userEmail">
-                    <el-input v-model="form.userEmail"></el-input>
-                </el-form-item>
+            <el-card style="width: 400px;margin:0 auto;">
+                <el-form ref="form" :model="form" :rules="validationRules" label-width="20%">
+                    <el-form-item label="Id">
+                        <div>{{ form.userId }}</div>
+                    </el-form-item>
+                    <el-form-item label="姓名" prop="userName">
+                        <el-input v-model="form.userName"></el-input>
+                    </el-form-item>
+                    <el-form-item label="电话" prop="userPhone">
+                        <el-input v-model="form.userPhone"></el-input>
+                    </el-form-item>
+                    <el-form-item label="邮箱" prop="userEmail">
+                        <el-input v-model="form.userEmail"></el-input>
+                    </el-form-item>
 
-                <el-form-item label="性别" prop="userGender">
-                    <el-radio-group v-model="form.userGender">
-                        <el-radio label="男" value="男">男</el-radio>
-                        <el-radio label="女" value="女">女</el-radio>
-                    </el-radio-group>
-                </el-form-item>
-                
-                <el-form-item>
-                    <el-button @click="restore">恢复</el-button>
-                    <el-button @click="resetForm">重置</el-button>
-                    <el-button @click="tempStorage">暂存</el-button>
-                    <el-button type="primary" @click="editUserInfo('form')">修改</el-button>
-                </el-form-item>
+                    <el-form-item label="性别" prop="userGender">
+                        <el-radio-group v-model="form.userGender">
+                            <el-radio label="男" value="男">男</el-radio>
+                            <el-radio label="女" value="女">女</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
 
-            </el-form>
-        </el-card>
+                    <el-form-item>
+                        <el-button @click="restore">恢复</el-button>
+                        <el-button @click="resetForm">重置</el-button>
+                        <el-button @click="tempStorage">暂存</el-button>
+                        <el-button type="primary" @click="editUserInfo('form')">修改</el-button>
+                    </el-form-item>
+
+                </el-form>
+            </el-card>
         </el-main>
     </el-container>
 </template>
@@ -82,24 +82,24 @@ export default {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
                     authService.updateUserInfo(this.form)
-                    .then((response) => {
-                        console.log(response);
-                        const {data} = response
-                        if (data.success) {
-                            localStorage.setItem("userInfo", JSON.stringify(this.form));
-                            this.$message.success({ message: "修改成功", showClose: true, })
-                        }else{
-                            this.$message.error({message:`${data.message}`,showClose:true})
-                        }
-                    })
-                    .catch(error=>{
-                        if(error.response){
-                            this.$message.error({message:`${error.response.data.message}`||'信息更新失败',showClose:true})
-                        }else{
-                            this.$message.error({message:'网络错误，请稍后重试editUserInfo',showClose:true})
-                        }
-                    })
-                } 
+                        .then((response) => {
+                            console.log(response);
+                            const { data } = response
+                            if (data.success) {
+                                localStorage.setItem("userInfo", JSON.stringify(this.form));
+                                this.$message.success({ message: "修改成功", showClose: true, })
+                            } else {
+                                this.$message.error({ message: `${data.message}`, showClose: true })
+                            }
+                        })
+                        .catch(error => {
+                            if (error.response) {
+                                this.$message.error({ message: `${error.response.data.message}` || '信息更新失败', showClose: true })
+                            } else {
+                                this.$message.error({ message: '网络错误，请稍后重试editUserInfo', showClose: true })
+                            }
+                        })
+                }
             });
             // this.resetForm();
             // this.getData();

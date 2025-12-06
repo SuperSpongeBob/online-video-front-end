@@ -1,10 +1,10 @@
 import axios from "axios";
 import { ElMessage } from 'element-plus';
 
-// const backendAddress = `http://localhost`      // 你的 API 基础 URL
+const backendAddress = `http://localhost`      // 你的 API 基础 URL
 // const backendAddress = `http://192.168.1.1`      // 你的 API 基础 URL
 // const backendAddress = `http://114.132.173.236`
-const backendAddress = `https://online-video.online`
+// const backendAddress = `https://online-video.online`
 
 const http = axios.create({
     baseURL: backendAddress,
@@ -22,6 +22,11 @@ http.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // 添加调试信息
+        console.log('请求配置:', config);
+        console.log('请求数据:', config.data);
+
         return config;
     },
     error => {
@@ -108,19 +113,19 @@ export default {
         return await http.post('/api/auth/logout')
     },
 
-    async registerCode(form){
-        return await http.post('/api/auth/register/code',form)
+    async registerCode(form) {
+        return await http.post('/api/auth/register/code', form)
     },
-    async registerInsert(userData){
-        return await http.post('/api/auth/register/insert',userData)
-    },
-
-    async forgetPasswordCode(userData){
-        return await http.post('/api/auth/forget-password/code',userData)
+    async registerInsert(userData) {
+        return await http.post('/api/auth/register/insert', userData)
     },
 
-    async forgetPasswordReset(form){
-        return await http.post('/api/auth/forget-password/reset',form)
+    async forgetPasswordCode(userData) {
+        return await http.post('/api/auth/forget-password/code', userData)
+    },
+
+    async forgetPasswordReset(form) {
+        return await http.post('/api/auth/forget-password/reset', form)
     },
 
     async verify(videoId) {
@@ -146,7 +151,7 @@ export default {
     async videoURL(videoId) {
         const response = await http.get(`/api/generate-temporary-token`)
         let url = `${backendAddress}/api/static/video?videoId=${videoId}`;
-        return url+`&&token=${response.data}`;
+        return url + `&&token=${response.data}`;
     },
 
     async getIndexVideos(VideoDate) {
@@ -161,7 +166,7 @@ export default {
         return await http.post('/api/videos', videoDate)
     },
 
-    async videosByUserId(userId){
+    async videosByUserId(userId) {
         return await http.get(`/api/videosByUserId?userId=${userId}`)
     },
 
@@ -169,12 +174,16 @@ export default {
         return await http.post('/api/searchVideo', condition)
     },
 
+    async videosInSameAlbum(videoId) {
+        return await http.get(`/api/videosInSameAlbum?videoId=${videoId}`)
+    },
+
     async updateVideo(video) {
         return await http.post(`/api/updateVideo`, video)
     },
 
-    async reiterateVideo(video){
-        return await http.post(`/api/reiterateVideo`,video)
+    async reiterateVideo(video) {
+        return await http.post(`/api/reiterateVideo`, video)
     },
 
     async deleteVideo(video) {
@@ -217,9 +226,12 @@ export default {
         return await http.post('/api/addComment', addComment)
     },
 
-     async deleteComment(condition){
-        return await http.post('/api/deleteComment',condition)
-     },
+    async deleteComment(condition) {
+        console.log('deleteComment 参数:', condition);
+        const response = await http.post('/api/deleteComment', condition);
+        console.log('deleteComment 响应:', response);
+        return response;
+    },
 
 
     //  Danmaku
@@ -231,8 +243,8 @@ export default {
         return await http.post('/api/addDanmaku', addDanmaku)
     },
 
-    async deleteDanmaku(condition){
-        return await http.post('/api/deleteDanmaku',condition)
+    async deleteDanmaku(condition) {
+        return await http.post('/api/deleteDanmaku', condition)
     },
 
     //  history

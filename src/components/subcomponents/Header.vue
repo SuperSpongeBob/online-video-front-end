@@ -164,12 +164,16 @@ export default {
             userName: userInfo ? userInfo.userName : null,
             searchText: '',
             LogStatus: localStorage.getItem("LoginState") === "true",
-            backgroundSwitch: true,
+            backgroundSwitch: false,
         }
     },
     created() {
-        if (localStorage.getItem('switch') == undefined) return
-        this.backgroundSwitch = localStorage.getItem('switch') == 'true'
+        // 如果localStorage中没有switch值，默认为false
+        if (localStorage.getItem('switch') === null) {
+            this.backgroundSwitch = false
+        } else {
+            this.backgroundSwitch = localStorage.getItem('switch') === 'true'
+        }
     },
     methods: {
         closeParticles(value) {

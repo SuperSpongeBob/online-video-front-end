@@ -130,7 +130,7 @@ export default {
             }
         },
         goToMoviePage(movie) {
-            window.open(`${window.location.origin}/videoPlay?movieId=${movie.videoId}&VIP=${movie.videoIsVip}&videoName=${movie.videoName}&videoTitle=${movie.videoTitle}`);
+            window.open(`${window.location.origin}/videoPlay?movieId=${movie.videoId}`);
         },
         handleError(event) {
             event.target.src = fallbackImage

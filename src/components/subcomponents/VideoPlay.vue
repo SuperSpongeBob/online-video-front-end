@@ -3,10 +3,21 @@
 
         <div style="width: 80%;">
             <!-- 视频容器 -->
-            <div class="video-container">
+            <div class="video-container" @mouseenter="handleVideoMouseEnter" @mouseleave="handleVideoMouseLeave">
+                <!-- 上一个/下一个视频按钮 -->
+                <div class="video-navigation" v-show="showNavigationButtons">
+                    <div class="nav-button prev-button" :class="{ 'disabled': !hasPreviousVideo }"
+                        @click="playPreviousVideo">
+                        <div class="nav-text">Previous</div>
+                    </div>
+                    <div class="nav-button next-button" :class="{ 'disabled': !hasNextVideo }" @click="playNextVideo">
+                        <div class="nav-text">Next</div>
+                    </div>
+                </div>
+
                 <video ref="videoRef" @timeupdate="handleTimeUpdate" @pause="handlePause" @play="handlePlay"
-                    id="myVideo" controls muted controlsList="nodownload" :src="url" autofocus preload="metadata"
-                    style="width: 100%; max-height: 75vh;object-fit: contain;">
+                    @ended="handleVideoEnded" id="myVideo" controls muted controlsList="nodownload" :src="url" autofocus
+                    preload="metadata" style="width: 100%; height: 80vh; object-fit: contain;">
                     您的浏览器不支持视频播放。
                 </video>
                 <!-- 弹幕容器 -->
@@ -40,67 +51,171 @@
             <div class="video-info-card">
                 <div class="video-info-header">
                     <span class="video-title">{{ this.videoName }}</span>
-                    <span :class="['video-badge', this.VIP === '2' ? 'vip' : 'free']">{{ this.VIP === '2' ? 'VIP' : '免费'
-                    }}</span>
+                    <span :class="['video-badge', this.VIP === 2 ? 'vip' : 'free']">{{ this.VIP === 2 ? 'VIP' : '免费'
+                        }}</span>
                 </div>
-                <!-- <div class="video-info-tags">
-                    <span class="video-tag">标签1</span>
-                    <span class="video-tag">标签2</span>
-                </div> -->
                 <div class="video-info-desc">{{ this.videoTitle }}</div>
             </div>
 
         </div>
 
-
-        <div style="width: 20%;">
-
-            <div @scroll="handleScroll"
-                style="height: 94vh;position: relative;overflow-y: auto; border-left: 1px solid #eee; scrollbar-width: none; background: #f7f8fa;">
-                <!-- 评论列表 -->
-                <div v-if="comments.length > 0">
-                    <!-- 渲染所有评论（包括顶级评论和所有回复） -->
-                    <div v-for="comment in getAllComments()" :key="comment.videoCommentId"
-                        :class="['comment-card', comment.parentId ? 'reply-card' : '']">
-                        <div class="comment-card-header">
-                            <span class="comment-username">
-                                {{ comment.userName || comment.userId }}
-                                <template v-if="comment.parentId"> 回复@{{ getReplyToUserName(comment) }}</template>
-                            </span>
-                        </div>
-                        <div class="comment-card-content">
-                            {{ comment.videoCommentContent }}
-                        </div>
-                        <div class="comment-card-footer">
-                            <span class="comment-time">{{ formatDate(comment.videoCommentTime) }}</span>
-                            <div class="comment-actions">
-                                <el-button link v-if="userInfo && comment.userId == userInfo.userId"
-                                    @click="deleteComment(comment.videoCommentId)" size="small">删除</el-button>
-                                <el-button link @click="replyToComment(comment)" size="small">回复</el-button>
-                            </div>
-                        </div>
+        <div style="width: 20%; height: 100vh; background: #f7f8fa;">
+            <!-- Tab按钮区域 -->
+            <div class="tab-header">
+                <div class="tab-buttons">
+                    <div :class="['tab-button', { 'active': activeTab === 'comment' }]"
+                        @click="handleTabChange('comment')">
+                        评论
                     </div>
-                </div>
-                <div v-else style="text-align: center; color: #aaa; margin-top: 20px;">
-                    暂时没有评论
+                    <div :class="['tab-button', { 'active': activeTab === 'album' }]" @click="handleTabChange('album')">
+                        专辑
+                    </div>
                 </div>
             </div>
 
-            <!-- 评论输入框 -->
-            <div class="comment-input-container" style="position: relative;">
-                <!-- 回复提示悬浮在输入框上方 -->
-                <transition name="fade">
-                    <div v-if="replyTo" class="reply-hint-floating">
-                        回复 {{ replyTo.userName || replyTo.userId }}: {{ replyTo.videoCommentContent }}
-                        <el-button link @click="cancelReply" size="small">取消</el-button>
+            <!-- 评论内容 -->
+            <div v-if="activeTab === 'comment'" class="tab-content">
+                <!-- 评论列表 -->
+                <div @scroll="handleScroll"
+                    style="height: 88vh;position: relative;overflow-y: auto; scrollbar-width: none;">
+                    <div v-if="comments.length > 0">
+                        <!-- 渲染所有评论（包括顶级评论和所有回复） -->
+                        <div v-for="comment in comments" :key="comment.videoCommentId" class="comment-card">
+                            <!-- 顶级评论内容 -->
+                            <div class="comment-card-header">
+                                <span class="comment-username">
+                                    {{ comment.userName || comment.userId }}
+                                </span>
+                            </div>
+                            <div class="comment-card-content">
+                                {{ comment.videoCommentContent }}
+                            </div>
+                            <div class="comment-card-footer">
+                                <span class="comment-time">{{ formatDate(comment.videoCommentTime) }}</span>
+                                <div class="comment-actions">
+                                    <el-button link v-if="userInfo && comment.userId == userInfo.userId"
+                                        @click="deleteComment(comment.videoCommentId)" size="small">删除</el-button>
+                                    <el-button link @click="replyToComment(comment)" size="small">回复</el-button>
+                                </div>
+                            </div>
+
+                            <!-- 二级区块：拍平所有子回复 -->
+                            <div v-if="flattenReplies(comment).length" class="replies-container">
+                                <div v-for="reply in flattenReplies(comment)" :key="reply.videoCommentId"
+                                    class="reply-item">
+                                    <div class="reply-header">
+                                        <span class="reply-author">
+                                            {{ reply.userName || reply.userId }}
+                                            <template v-if="reply.parentId">
+                                                <el-icon>
+                                                    <Promotion />
+                                                </el-icon> @{{ getParentUserName(reply.parentId, comment) }}
+                                            </template>
+                                        </span>
+                                        <span class="reply-time">{{ formatDate(reply.videoCommentTime) }}</span>
+                                    </div>
+                                    <div class="reply-content">{{ reply.videoCommentContent }}</div>
+                                    <div class="reply-actions">
+                                        <el-button link v-if="userInfo && reply.userId == userInfo.userId"
+                                            @click="deleteComment(reply.videoCommentId)" size="small">删除</el-button>
+                                        <el-button link @click="replyToComment(comment, reply)"
+                                            size="small">回复</el-button>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </transition>
-                <el-input v-model="addComment.videoCommentContent" maxlength="100" :rows="2" clearable
-                    :placeholder="replyPlaceholder" @keyup.enter="AddComment">
-                    <template #append>
-                        <el-button icon="Promotion" @click="AddComment"></el-button>
-                    </template>
-                </el-input>
+                    <div v-else style="text-align: center; color: #aaa; margin-top: 20px;">
+                        暂时没有评论
+                    </div>
+                </div>
+
+                <!-- 评论输入框 -->
+                <div class="comment-input-container" style="position: relative;">
+                    <!-- 回复提示悬浮在输入框上方 -->
+                    <transition name="fade">
+                        <div v-if="replyTo" class="reply-hint-floating">
+                            回复 {{ replyTo.userName || replyTo.userId }}: {{ replyTo.videoCommentContent }}
+                            <el-button link @click="cancelReply" size="small">取消</el-button>
+                        </div>
+                    </transition>
+                    <el-input ref="commentInput" v-model="addComment.videoCommentContent" maxlength="100" :rows="2"
+                        clearable :placeholder="replyPlaceholder" @keyup.enter="AddComment">
+                        <template #append>
+                            <el-button icon="Promotion" @click="AddComment"></el-button>
+                        </template>
+                    </el-input>
+                </div>
+            </div>
+
+            <!-- 专辑内容 -->
+            <div v-if="activeTab === 'album'" class="tab-content">
+                <!-- 专辑视频列表 -->
+                <div @scroll="handleAlbumScroll"
+                    style="height: 94vh;position: relative;overflow-y: auto; scrollbar-width: none;">
+                    <div v-if="albumLoading" style="text-align: center; color: #aaa; margin-top: 20px;">
+                        加载中...
+                    </div>
+                    <div v-else-if="albumVideos.length > 0">
+                        <div class="album-video-grid">
+                            <div v-for="video in albumVideos" :key="video.videoId"
+                                :class="['album-video-card', { 'current-playing': isCurrentVideo(video) }]"
+                                @click="goToVideo(video)">
+                                <!-- VIP/免费标签 -->
+                                <div :class="['album-video-badge', video.videoIsVip === 2 ? 'vip' : 'free']">
+                                    {{ video.videoIsVip === 2 ? "VIP" : "免费" }}
+                                </div>
+
+                                <!-- 视频缩略图 -->
+                                <div class="album-video-thumbnail">
+                                    <img :src="getThumbnailUrl(video.thumbnailPath)" @error="handleThumbnailError"
+                                        alt="视频缩略图" />
+
+                                    <!-- 视频信息覆盖层 -->
+                                    <div class="album-video-overlay">
+                                        <div class="album-video-stats">
+                                            <div class="album-stat-item">
+                                                <el-icon>
+                                                    <View />
+                                                </el-icon>
+                                                <span>{{ formatViewCount(video.viewCount) }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="album-video-stats">
+                                            <div class="album-stat-item">
+                                                <span>{{ formatDuration(video.duration) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 视频信息 -->
+                                <div class="album-video-info">
+                                    <div class="album-video-title" :title="video.videoName">{{ video.videoName }}
+                                    </div>
+                                    <div class="album-video-description" :title="video.videoTitle">{{
+                                        video.videoTitle }}
+                                    </div>
+                                </div>
+
+                                <!-- 当前播放指示器 -->
+                                <div v-if="isCurrentVideo(video)" class="playing-indicator">
+                                    <div class="audio-bars">
+                                        <div class="bar bar1"></div>
+                                        <div class="bar bar2"></div>
+                                        <div class="bar bar3"></div>
+                                        <div class="bar bar4"></div>
+                                    </div>
+                                    <span class="playing-text">正在播放</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else style="text-align: center; color: #aaa; margin-top: 20px;">
+                        暂无专辑视频
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -109,8 +224,15 @@
 <script>
 import authService from '../../utils/authService';
 import { formatDate } from '../../utils/dateUtils';
+import { View, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
+import axios from 'axios';
 
 export default {
+    components: {
+        View,
+        ArrowLeft,
+        ArrowRight
+    },
     data() {
         return {
             url: '',                 // 替换为你的视频文件路径
@@ -154,6 +276,17 @@ export default {
             //  history
             watchedSeconds: null,    //  已观看时间
 
+            // 专辑相关
+            activeTab: 'comment', // 当前Tab，默认显示评论
+            albumVideos: [],    // 专辑视频列表
+            albumLoading: false,
+
+            // 视频导航相关
+            currentVideoIndex: -1, // 当前视频在专辑中的索引
+            hasPreviousVideo: false,
+            hasNextVideo: false,
+            showNavigationButtons: false, // 控制导航按钮显示/隐藏
+            pendingNotification: null, // 待显示的通知
         };
 
     },
@@ -179,8 +312,32 @@ export default {
         //  格式化时间戳
         formatDate: formatDate,
 
+        // 聚焦到评论输入框
+        focusCommentInput() {
+            this.$nextTick(() => {
+                if (this.$refs.commentInput) {
+                    this.$refs.commentInput.focus();
+                }
+            });
+        },
+
+        // 刷新用户信息
+        refreshUserInfo() {
+            try {
+                const storedUserInfo = localStorage.getItem("userInfo");
+                if (storedUserInfo) {
+                    this.userInfo = JSON.parse(storedUserInfo);
+                }
+            } catch (error) {
+                console.error('刷新用户信息失败:', error);
+            }
+        },
+
         // 回复评论
         replyToComment(parentComment, replyComment = null) {
+            // 刷新用户信息，确保数据是最新的
+            this.refreshUserInfo();
+
             if (!this.userInfo) {
                 this.$message.warning({ message: '请先登录', showClose: true });
                 return;
@@ -189,6 +346,9 @@ export default {
             this.replyTo = replyComment || parentComment;
             this.addComment.parentId = this.replyTo.videoCommentId;
             this.addComment.replyToId = this.replyTo.userId;
+
+            // 自动聚焦到输入框
+            this.focusCommentInput();
         },
 
         // 取消回复
@@ -196,6 +356,9 @@ export default {
             this.replyTo = null;
             this.addComment.parentId = null;
             this.addComment.replyToId = null;
+
+            // 取消回复后也聚焦到输入框
+            this.focusCommentInput();
         },
 
         async videoPlay() {
@@ -203,9 +366,6 @@ export default {
                 const urlParams = new URLSearchParams(window.location.search)
                 //  movieId为从videoList传来的videoId
                 const movieId = urlParams.get("movieId")             //从URL中获取movieId
-                this.videoName = urlParams.get("videoName")
-                this.videoTitle = urlParams.get("videoTitle")
-                this.VIP = urlParams.get("VIP")
                 this.reqComment.videoId = this.addComment.videoId = movieId
 
                 this.url = await authService.videoURL(movieId);
@@ -252,11 +412,43 @@ export default {
 
         //  删除评论
         async deleteComment(videoCommentId) {
-            const response = await authService.deleteComment({ videoCommentId: videoCommentId })
-            if (response.data == true && response.status == 200) {
-                this.$message.warning({ message: `删除评论成功：${videoCommentId}`, showClose: true })
-                // 递归删除评论（支持顶层和回复）
-                this.comments = this.removeCommentById(this.comments, videoCommentId);
+            try {
+                // 刷新用户信息，确保数据是最新的
+                this.refreshUserInfo();
+
+                if (!this.userInfo) {
+                    this.$message.warning({ message: '请先登录', showClose: true });
+                    return;
+                }
+
+                // 添加调试信息
+                console.log('删除评论参数:', { videoCommentId: videoCommentId });
+                console.log('当前用户信息:', this.userInfo);
+
+                // 直接使用 axios 发送请求，确保数据正确传递
+                const token = localStorage.getItem('VideoToken');
+                const response = await axios.post(`${authService.backendAddress()}/api/deleteComment`,
+                    { videoCommentId: videoCommentId },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        withCredentials: true
+                    }
+                );
+                console.log('删除评论响应:', response);
+
+                if (response.data == true && response.status == 200) {
+                    this.$message.warning({ message: `删除评论成功：${videoCommentId}`, showClose: true })
+                    // 递归删除评论（支持顶层和回复）
+                    this.comments = this.removeCommentById(this.comments, videoCommentId);
+                } else {
+                    this.$message.error({ message: '删除评论失败', showClose: true });
+                }
+            } catch (error) {
+                console.error('删除评论失败:', error);
+                this.$message.error({ message: '删除评论失败，请重试', showClose: true });
             }
         },
 
@@ -274,6 +466,22 @@ export default {
             return filtered;
         },
 
+        // 拍平所有子回复
+        flattenReplies(comment) {
+            const result = [];
+            function dfs(replies) {
+                if (!replies) return;
+                for (const reply of replies) {
+                    result.push(reply);
+                    if (reply.replies && reply.replies.length > 0) {
+                        dfs(reply.replies);
+                    }
+                }
+            }
+            dfs(comment.replies);
+            return result;
+        },
+
         //  检测滚动情况
         handleScroll(event) {
             const container = event.target;
@@ -289,54 +497,72 @@ export default {
         //评论
         async AddComment() {
             try {
-                //  从session中获取用户信息
-                // this.addComment.videoCommentTime = (new Date().toLocaleString());
-                this.addComment.videoCommentTime = (Date.now())
+                this.refreshUserInfo();
+                this.addComment.videoCommentTime = Date.now();
                 if (this.userInfo == null) {
-                    this.$message.warning({ message: '请登录' })
-                    return
+                    this.$message.warning({ message: '请登录' });
+                    return;
                 }
-                const userId = this.userInfo.userId
-                console.log(userId)
-
+                const userId = this.userInfo.userId;
                 if (!this.addComment.videoCommentContent.trim()) {
                     this.$message.warning({ message: '评论内容不能为空', showClose: true });
                     return;
                 } else if (this.userInfo == null || userId == null) {
-                    this.$message.warning({ message: '登录后即可评论', showClose: true })
+                    this.$message.warning({ message: '登录后即可评论', showClose: true });
                     return;
                 } else {
-                    this.addComment.userId = userId
-                    this.addComment.userName = this.userInfo.userName          //从本地存储获取用户名
-                    console.log(this.addComment)
-                    const response = await authService.addComment(this.addComment)
-                    if (response.status == 200 && response.data == true) {
-                        // 如果是回复评论，需要重新加载评论列表以获取完整的层级结构
-                        if (this.addComment.parentId) {
-                            this.comments = []; // 清空当前评论列表
-                            this.reqComment.pageNum = 1; // 重置页码
-                            await this.loadMoreComments(); // 重新加载评论
-                        } else {
-                            // 如果是顶层评论，直接添加到列表开头
-                            this.comments = [this.addComment, ...this.comments];
-                        }
-
+                    this.addComment.userId = userId;
+                    this.addComment.userName = this.userInfo.userName;
+                    const response = await authService.addComment(this.addComment);
+                    if (response.status == 200 && response.data && response.data.success) {
+                        // 用后端返回的真实ID
+                        const newComment = {
+                            ...this.addComment,
+                            videoCommentId: response.data.videoCommentId,
+                            replies: [],
+                        };
+                        this.insertNewCommentToList(newComment);
                         this.$message.success({ message: '评论成功', showClose: true });
                         this.addComment = {
                             videoId: this.reqComment.videoId,
                             parentId: null,
                             replyToId: null
-                        }; // 清空评论输入框，避免双向数据绑定
-                        this.cancelReply(); // 取消回复状态
+                        };
+                        this.cancelReply();
+                        this.focusCommentInput();
                     } else {
-                        this.$message.error({ message: '出错啦', showClose: true })
+                        this.$message.error({ message: '出错啦', showClose: true });
                     }
-
                 }
             } catch (error) {
                 console.error('提交评论失败：', error);
                 this.$message.error({ messsage: '提交评论失败', showClose: true });
             }
+        },
+
+        // 新增辅助方法
+        insertNewCommentToList(newComment) {
+            if (!newComment.parentId) {
+                // 顶级评论，插入最前面
+                this.comments.unshift(newComment);
+            } else {
+                // 递归查找父评论
+                const parent = this.findCommentById(this.comments, newComment.parentId);
+                if (parent) {
+                    if (!parent.replies) parent.replies = [];
+                    parent.replies.push(newComment);
+                }
+            }
+        },
+        findCommentById(comments, id) {
+            for (let comment of comments) {
+                if (comment.videoCommentId === id) return comment;
+                if (comment.replies && comment.replies.length > 0) {
+                    const found = this.findCommentById(comment.replies, id);
+                    if (found) return found;
+                }
+            }
+            return null;
         },
 
         //  从url中获取视频id
@@ -535,8 +761,251 @@ export default {
             }
         },
 
+        async fetchAlbumVideos() {
+            this.albumLoading = true;
+            try {
+                const videoId = this.getVideoIdByURL();
+                const res = await authService.videosInSameAlbum(videoId);
+                this.albumVideos = res.data || [];
+                // 更新视频导航状态
+                this.updateVideoNavigation();
+                // 更新当前视频信息
+                this.updateCurrentVideoInfoFromAlbum();
+            } catch (e) {
+                this.$message.error('获取专辑视频失败');
+            }
+            this.albumLoading = false;
+        },
+        handleTabChange(tabName) {
+            this.activeTab = tabName;
+            // 移除重复获取数据的逻辑，因为页面加载时已经获取了
+        },
+
+        // 专辑滚动处理
+        handleAlbumScroll(event) {
+            // 可以在这里添加专辑列表的滚动加载逻辑
+            const container = event.target;
+            const scrollTop = container.scrollTop;
+            const clientHeight = container.clientHeight;
+            const scrollHeight = container.scrollHeight;
+
+            // 检查是否滚动到底部，可以在这里实现分页加载
+            if (scrollTop + clientHeight >= scrollHeight - 5) {
+                // 这里可以添加加载更多专辑视频的逻辑
+                console.log('专辑列表滚动到底部');
+            }
+        },
+
+        // 格式化视频时长
+        formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        },
+        goToVideo(video) {
+            // 跳转到该视频播放页，只带上movieId参数
+            const currentPath = window.location.pathname;
+            const queryParams = new URLSearchParams({
+                movieId: video.videoId
+            });
+            window.location.href = `${currentPath}?${queryParams.toString()}`;
+        },
+
+        // 从专辑数据中获取当前视频信息
+        updateCurrentVideoInfoFromAlbum() {
+            const currentVideoId = this.getVideoIdByURL();
+            const currentVideo = this.albumVideos.find(video => video.videoId == currentVideoId);
+
+            if (currentVideo) {
+                this.videoName = currentVideo.videoName;
+                this.videoTitle = currentVideo.videoTitle;
+                this.VIP = currentVideo.videoIsVip;
+                console.log('currentVideo:  ' + JSON.stringify(this.VIP))
+            }
+        },
+
+        // 更新当前视频信息后刷新导航状态
+        updateCurrentVideoInfo() {
+            // 在视频信息更新后，重新获取专辑视频并更新导航状态
+            if (this.activeTab === 'album' || this.albumVideos.length > 0) {
+                this.fetchAlbumVideos();
+            }
+        },
+
+        getThumbnailUrl(path) {
+            // 根据你的后端缩略图访问规则拼接
+            return `${authService.backendAddress()}/images/${path}`;
+        },
+
+        // 格式化播放量
+        formatViewCount(count) {
+            if (count >= 10000) return (count / 10000).toFixed(1) + '万';
+            return count;
+        },
+
+        // 处理缩略图加载错误
+        handleThumbnailError(event) {
+            event.target.src = require('../../assets/Damaged.png');
+        },
+
+        // 判断是否为当前播放的视频
+        isCurrentVideo(video) {
+            const currentVideoId = this.getVideoIdByURL();
+            return video.videoId == currentVideoId;
+        },
+
+        // 处理视频播放结束
+        handleVideoEnded() {
+            console.log('视频播放结束，自动播放下一个视频');
+            this.playNextVideo();
+        },
+
+        // 播放下一个视频
+        playNextVideo() {
+            if (!this.hasNextVideo) {
+                this.$message.warning({ message: '已经是最后一个视频啦', showClose: true });
+                return;
+            }
+
+            const nextIndex = this.currentVideoIndex + 1;
+            if (nextIndex < this.albumVideos.length) {
+                const nextVideo = this.albumVideos[nextIndex];
+                // 保存通知到localStorage
+                localStorage.setItem('videoSwitchNotification', JSON.stringify({
+                    type: 'success',
+                    message: `正在切换到：${nextVideo.videoName}`,
+                    timestamp: Date.now()
+                }));
+                // 添加点击反馈
+                this.addClickFeedback('next');
+                this.goToVideo(nextVideo);
+            }
+        },
+
+        // 播放上一个视频
+        playPreviousVideo() {
+            if (!this.hasPreviousVideo) {
+                this.$message.warning({ message: '已经是第一个视频啦', showClose: true });
+                return;
+            }
+
+            const prevIndex = this.currentVideoIndex - 1;
+            if (prevIndex >= 0) {
+                const prevVideo = this.albumVideos[prevIndex];
+                // 保存通知到localStorage
+                localStorage.setItem('videoSwitchNotification', JSON.stringify({
+                    type: 'success',
+                    message: `正在切换到：${prevVideo.videoName}`,
+                    timestamp: Date.now()
+                }));
+                // 添加点击反馈
+                this.addClickFeedback('prev');
+                this.goToVideo(prevVideo);
+            }
+        },
+
+        // 添加点击反馈效果
+        addClickFeedback(type) {
+            const button = document.querySelector(`.nav-button.${type}-button`);
+            if (button) {
+                button.classList.add('clicking');
+                setTimeout(() => {
+                    button.classList.remove('clicking');
+                }, 150);
+            }
+        },
+
+        // 更新视频导航状态
+        updateVideoNavigation() {
+            if (this.albumVideos.length === 0) {
+                this.hasPreviousVideo = false;
+                this.hasNextVideo = false;
+                return;
+            }
+
+            // 找到当前视频在专辑中的索引
+            const currentVideoId = this.getVideoIdByURL();
+            this.currentVideoIndex = this.albumVideos.findIndex(video => video.videoId == currentVideoId);
+
+            // 更新导航按钮状态
+            this.hasPreviousVideo = this.currentVideoIndex > 0;
+            this.hasNextVideo = this.currentVideoIndex < this.albumVideos.length - 1;
+        },
+
+        // 控制导航按钮显示/隐藏
+        handleVideoMouseEnter() {
+            this.showNavigationButtons = true;
+        },
+
+        handleVideoMouseLeave() {
+            this.showNavigationButtons = false;
+        },
+
+        // 检查并显示保存的通知
+        checkAndShowNotification() {
+            const savedNotification = localStorage.getItem('videoSwitchNotification');
+            if (savedNotification) {
+                try {
+                    const notification = JSON.parse(savedNotification);
+                    const now = Date.now();
+                    // 只显示5秒内的通知
+                    if (now - notification.timestamp < 5000) {
+                        if (notification.type === 'success') {
+                            this.$message.success({
+                                message: notification.message,
+                                showClose: true,
+                                duration: 3000
+                            });
+                        }
+                    }
+                    // 清除保存的通知
+                    localStorage.removeItem('videoSwitchNotification');
+                } catch (error) {
+                    console.error('解析通知失败:', error);
+                    localStorage.removeItem('videoSwitchNotification');
+                }
+            }
+        },
+
+        // 处理视频播放状态变化
+        handlePlay() {
+            this.currentDanmakus.forEach(danmaku => {
+                danmaku.paused = false;
+            });
+            // 播放时隐藏导航按钮
+            this.showNavigationButtons = false;
+        },
+
+        handlePause() {
+            this.currentDanmakus.forEach(danmaku => {
+                danmaku.paused = true;
+            });
+            // 暂停时显示导航按钮
+            this.showNavigationButtons = true;
+        },
+
+        getParentUserName(parentId, rootComment) {
+            // 递归查找parentId对应的评论
+            function dfs(comment) {
+                if (!comment) return null;
+                if (comment.videoCommentId === parentId) return comment.userName || comment.userId;
+                if (comment.replies && comment.replies.length > 0) {
+                    for (const reply of comment.replies) {
+                        const found = dfs(reply);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+            return dfs(rootComment);
+        }
+
     },
     mounted() {
+        // 刷新用户信息
+        this.refreshUserInfo();
+
         this.loadMoreComments()
 
         this.videoPlay()
@@ -563,6 +1032,16 @@ export default {
             video.play()
         })
         window.addEventListener('beforeunload', this.saveWatchHistory)
+
+        // 页面加载时立即获取专辑数据，确保导航按钮正常工作
+        this.fetchAlbumVideos()
+
+        // 检查并显示保存的通知
+        this.$nextTick(() => {
+            setTimeout(() => {
+                this.checkAndShowNotification();
+            }, 500); // 延迟500ms确保页面完全加载
+        });
     },
     beforeDestroy() {
         window.removeEventListener('beforeunload', this.saveWatchHistory)
@@ -579,9 +1058,188 @@ export default {
     margin: 0 auto;
 }
 
+/* 视频导航按钮 */
+.video-navigation {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    z-index: 10;
+    pointer-events: none;
+    /* 让按钮可以穿透到视频上 */
+    transition: opacity 0.3s ease;
+}
+
+/* 优化视频容器样式 */
+.video-container {
+    position: relative;
+    width: 100%;
+    max-width: 80vw;
+    height: 80vh;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button {
+    width: 60px;
+    height: 45px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.7));
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.nav-button:hover {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8));
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.06);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.nav-button:active {
+    transform: scale(1.05);
+    transition: all 0.1s ease;
+}
+
+.nav-button.disabled {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-button.disabled:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 文字样式 */
+.nav-text {
+    font-size: 10px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 为按钮添加特殊效果 */
+.nav-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 6px;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.nav-button:hover::before {
+    opacity: 1;
+}
+
+/* 添加按钮内部光效 */
+.nav-button::after {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    right: 1px;
+    bottom: 1px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.nav-button:hover::after {
+    opacity: 1;
+}
+
+/* 添加方向指示器 */
+.nav-button.prev-button .nav-text::before {
+    content: '◀';
+    margin-right: 3px;
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+.nav-button.next-button .nav-text::after {
+    content: '▶';
+    margin-left: 3px;
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+/* 添加按钮点击动画 */
+@keyframes buttonClick {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.95);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.nav-button.clicking {
+    animation: buttonClick 0.15s ease-in-out;
+}
+
+/* 添加按钮脉冲效果 */
+@keyframes buttonPulse {
+    0% {
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 3px 12px rgba(64, 158, 255, 0.25);
+    }
+
+    100% {
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+    }
+}
+
+.nav-button:not(.disabled):hover {
+    animation: buttonPulse 2s infinite;
+}
+
 video {
     width: 100%;
-    height: auto;
+    height: 80vh;
+    object-fit: contain;
 }
 
 .danmaku-container {
@@ -589,7 +1247,7 @@ video {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 80vh;
     pointer-events: none;
     overflow: hidden;
 }
@@ -987,5 +1645,237 @@ video {
     margin-left: 18px;
     box-shadow: none;
     border-left: 3px solid #e0e0e0;
+}
+
+/* 专辑视频网格样式 */
+.album-video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    padding: 16px;
+}
+
+.album-video-card {
+    position: relative;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.album-video-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.album-video-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #fff;
+    z-index: 2;
+}
+
+.album-video-badge.vip {
+    background: linear-gradient(90deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.album-video-badge.free {
+    background: linear-gradient(90deg, #00d4aa 0%, #00b894 100%);
+}
+
+.album-video-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    overflow: hidden;
+}
+
+.album-video-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.album-video-card:hover .album-video-thumbnail img {
+    transform: scale(1.05);
+}
+
+.album-video-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    padding: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.album-video-stats {
+    display: flex;
+    gap: 8px;
+}
+
+.album-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.album-video-info {
+    padding: 6px;
+}
+
+.album-video-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.album-video-description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 当前播放视频样式 */
+.album-video-card.current-playing {
+    border: 2px solid #409eff;
+    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+}
+
+.album-video-card.current-playing:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(64, 158, 255, 0.4);
+}
+
+/* 播放指示器 */
+.playing-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(64, 158, 255, 0.9);
+    border-radius: 20px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 3;
+}
+
+.playing-text {
+    color: #fff;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* 音频条动画 */
+.audio-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+}
+
+.bar {
+    width: 2px;
+    background: #fff;
+    border-radius: 1px;
+    animation: audioWave 1.2s ease-in-out infinite;
+}
+
+.bar1 {
+    height: 4px;
+    animation-delay: 0s;
+}
+
+.bar2 {
+    height: 8px;
+    animation-delay: 0.2s;
+}
+
+.bar3 {
+    height: 6px;
+    animation-delay: 0.4s;
+}
+
+.bar4 {
+    height: 10px;
+    animation-delay: 0.6s;
+}
+
+@keyframes audioWave {
+
+    0%,
+    100% {
+        transform: scaleY(0.5);
+    }
+
+    50% {
+        transform: scaleY(1);
+    }
+}
+
+/* 自定义Tab按钮样式 */
+.tab-header {
+    background: #f7f8fa;
+    border-bottom: 1px solid #e4e7ed;
+    padding: 0;
+}
+
+.tab-buttons {
+    display: flex;
+    background: #f7f8fa;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px 16px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.tab-button:hover {
+    color: #409eff;
+    background: rgba(64, 158, 255, 0.1);
+}
+
+.tab-button.active {
+    color: #409eff;
+    border-bottom-color: #409eff;
+    background: #fff;
+}
+
+.tab-content {
+    height: calc(100vh - 50px);
+    /* 减去Tab头部高度 */
+    background: #f7f8fa;
 }
 </style>

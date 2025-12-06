@@ -25,8 +25,8 @@
                 </el-form-item>
 
                 <el-form-item label="确认密码" prop="confirmPassword">
-                    <el-input type="password" v-model="form.confirmPassword" placeholder="请再次输入新密码" autocomplete="new-password"
-                        show-password></el-input>
+                    <el-input type="password" v-model="form.confirmPassword" placeholder="请再次输入新密码"
+                        autocomplete="new-password" show-password></el-input>
                 </el-form-item>
 
                 <el-form-item label="验证码" prop="code">

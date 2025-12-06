@@ -19,7 +19,7 @@
             <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
                 <template #default="scope">
                     <span :style="getStatusColor(scope.row.videoApprovalStatus)">{{ scope.row.videoApprovalStatus
-                    }}</span>
+                        }}</span>
                 </template>
             </el-table-column>
             <el-table-column property="videoTitle" label="标题" show-overflow-tooltip />
