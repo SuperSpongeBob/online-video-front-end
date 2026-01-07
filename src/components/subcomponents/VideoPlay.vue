@@ -20,6 +20,15 @@
                     preload="metadata" style="width: 100%; height: 80vh; object-fit: contain;">
                     您的浏览器不支持视频播放。
                 </video>
+                <!-- 30秒限制提示遮罩 -->
+                <div v-if="videoType === 'NO_COPYRIGHT' && showTimeLimitOverlay" class="time-limit-overlay" 
+                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); 
+                    display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 1000;">
+                    <h3 style="margin-bottom: 20px;">该视频为无版权视频，仅可观看30秒预览</h3>
+                    <el-button v-if="sourceVideoUrl" type="primary" size="large" @click="goToSourceVideo">
+                        前往正版平台观看完整视频
+                    </el-button>
+                </div>
                 <!-- 弹幕容器 -->
                 <div class="danmaku-container" ref="danmakuContainer" v-if="showDanmakus">
                     <div v-for="(danmaku, index) in currentDanmakus" :key="index" :style="{
@@ -32,30 +41,69 @@
                         {{ danmaku.text }}
                     </div>
                 </div>
-                <!-- 发送弹幕输入框和按钮 -->
-                <div style="text-align: center;">
-                    <el-input v-model="danmakuText" placeholder="输入弹幕内容" @keyup.enter="sendDanmaku" maxlength="30"
-                        clearable style="max-width: 500px;flex: 1;">
-                        <template #append>
-                            <el-button icon="Promotion" @click="sendDanmaku"></el-button>
-                        </template>
-                    </el-input>
-                    &nbsp;
-                    <!-- 显示/隐藏弹幕按钮 -->
-                    <el-switch v-model="showDanmakus" class="ml-2" inline-prompt active-text="弹幕" inactive-text="弹幕" />
-                </div>
+            </div>
+            
+            <!-- 发送弹幕输入框和按钮 - 移到video-container外部 -->
+            <div style="text-align: center;">
+                <el-input v-model="danmakuText" placeholder="输入弹幕内容" @keyup.enter="sendDanmaku" maxlength="30"
+                    clearable style="max-width: 500px;">
+                    <template #append>
+                        <el-button icon="Promotion" @click="sendDanmaku">发送</el-button>
+                    </template>
+                </el-input>
+                &nbsp;
+                <!-- 显示/隐藏弹幕按钮 -->
+                <el-switch v-model="showDanmakus" class="ml-2" inline-prompt active-text="弹幕" inactive-text="弹幕" />
 
+                <!-- 举报按钮 - 移除v-if条件，未登录时也显示但提示需要登录 -->
+                <el-button type="danger" size="small" @click="handleReportClick" 
+                        :disabled="hasReported" style="margin-left: 10px;">
+                        {{ hasReported ? '已举报' : '举报' }}
+                </el-button>
+
+                <el-button v-if="videoType === 'NO_COPYRIGHT' &&sourceVideoUrl" type="primary" size="small" @click="goToSourceVideo">
+                        跳转至源视频
+                </el-button>
             </div>
 
             <!-- 视频信息卡片 -->
             <div class="video-info-card">
                 <div class="video-info-header">
                     <span class="video-title">{{ this.videoName }}</span>
-                    <span :class="['video-badge', this.VIP === 2 ? 'vip' : 'free']">{{ this.VIP === 2 ? 'VIP' : '免费'
-                        }}</span>
+                    <span :class="['video-badge', getVideoTypeClass(this.videoType)]">{{ getVideoTypeText(this.videoType) }}</span>
+
                 </div>
                 <div class="video-info-desc">{{ this.videoTitle }}</div>
+                <!-- 无版权视频提示 -->
+                <!-- <div v-if="videoType === 'NO_COPYRIGHT' && sourceVideoUrl" class="copyright-notice" style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                    <p style="margin: 0 0 5px 0; color: #856404;">该视频为无版权视频，仅可观看30秒预览</p>
+                    <el-button type="primary" size="small" @click="goToSourceVideo">前往正版平台观看</el-button>
+                </div> -->
             </div>
+            
+            <!-- 举报对话框 -->
+            <el-dialog v-model="showReportDialog" title="举报视频" width="500px">
+                <el-form :model="reportForm" label-width="100px">
+                    <el-form-item label="举报类型" required>
+                        <el-select v-model="reportForm.reportType" placeholder="请选择举报类型" style="width: 100%;">
+                            <el-option label="侵权" value="侵权"></el-option>
+                            <el-option label="色情" value="色情"></el-option>
+                            <el-option label="暴力" value="暴力"></el-option>
+                            <el-option label="其他" value="其他"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="举报描述" required>
+                        <el-input v-model="reportForm.reportDescription" type="textarea" :rows="4" 
+                            placeholder="请详细描述举报原因" maxlength="500" show-word-limit></el-input>
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <span class="dialog-footer">
+                        <el-button @click="showReportDialog = false">取消</el-button>
+                        <el-button type="primary" @click="submitReport">提交</el-button>
+                    </span>
+                </template>
+            </el-dialog>
 
         </div>
 
@@ -163,8 +211,8 @@
                                 :class="['album-video-card', { 'current-playing': isCurrentVideo(video) }]"
                                 @click="goToVideo(video)">
                                 <!-- VIP/免费标签 -->
-                                <div :class="['album-video-badge', video.videoIsVip === 2 ? 'vip' : 'free']">
-                                    {{ video.videoIsVip === 2 ? "VIP" : "免费" }}
+                                <div :class="['album-video-badge', getVideoTypeClass(video.videoType)]">
+                                    {{ getVideoTypeText(video.videoType) }}
                                 </div>
 
                                 <!-- 视频缩略图 -->
@@ -224,6 +272,7 @@
 <script>
 import authService from '../../utils/authService';
 import { formatDate } from '../../utils/dateUtils';
+import { getVideoTypeText, getVideoTypeClass, getVideoTypeTag } from '../../utils/videoTypeUtils';
 import { View, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import axios from 'axios';
 
@@ -238,7 +287,7 @@ export default {
             url: '',                 // 替换为你的视频文件路径
             videoName: '',
             videoTitle: '',
-            VIP: '',
+            videoType: null, // 视频类型
             commentContent: '',
             comments: [],            //存储评论数据的数组
             addComment: {
@@ -287,6 +336,18 @@ export default {
             hasNextVideo: false,
             showNavigationButtons: false, // 控制导航按钮显示/隐藏
             pendingNotification: null, // 待显示的通知
+            
+            // 举报相关
+            showReportDialog: false,
+            hasReported: false,
+            reportForm: {
+                reportType: '',
+                reportDescription: ''
+            },
+            videoType: null, // 视频类型
+            sourceVideoUrl: null, // 源视频链接
+            maxWatchTime: null, // 最大观看时间（秒），用于无版权视频限制
+            showTimeLimitOverlay: false, // 显示30秒限制遮罩
         };
 
     },
@@ -311,6 +372,11 @@ export default {
     methods: {
         //  格式化时间戳
         formatDate: formatDate,
+        
+        // 视频类型工具方法
+        getVideoTypeText,
+        getVideoTypeClass,
+        getVideoTypeTag,
 
         // 聚焦到评论输入框
         focusCommentInput() {
@@ -368,27 +434,137 @@ export default {
                 const movieId = urlParams.get("movieId")             //从URL中获取movieId
                 this.reqComment.videoId = this.addComment.videoId = movieId
 
+                // 重置30秒限制相关状态
+                this.maxWatchTime = null;
+                this.showTimeLimitOverlay = false;
+
                 this.url = await authService.videoURL(movieId);
                 await authService.increaseViewCount(movieId);
 
                 //  验证用户是否可以观看视频，仅用于提示作用，如果该用户是这个视频的作者，即使为VIP视频也可以观看
                 const response = await authService.verify(movieId)
                 console.log(response)
-                //  获取视频信息
-                if (response.status === 200 && response.data == false) {
-                    this.$message.warning({ message: '视频为VIP视频，升级会员即可观看全片', showClose: true })
+                
+                // 获取视频类型和源视频链接
+                if (response.status === 200 && response.data) {
+                    const data = response.data;
+                    this.videoType = data.videoType;
+                    this.sourceVideoUrl = data.sourceVideoUrl;
+                    
+                    // 检查是否可以观看
+                    if (data.canWatch === false) {
+                        // 不能观看，显示原因
+                        if (data.reason === 'NO_COPYRIGHT' || data.videoType === 'NO_COPYRIGHT') {
+                            // 无版权视频，显示提示并提供跳转链接
+                            this.$message.warning({ 
+                                message: data.message || '该视频为无版权视频，仅管理员可以观看', 
+                                showClose: true,
+                                duration: 5000
+                            });
+                            // 如果提供了源视频链接，可以显示跳转提示
+                            if (this.sourceVideoUrl) {
+                                this.showTimeLimitOverlay = true; // 显示提示覆盖层
+                            }
+                        } else if (data.reason === 'VIP_REQUIRED') {
+                            // VIP视频
+                            this.$message.warning({ 
+                                message: data.message || '视频为VIP视频，升级会员即可观看全片', 
+                                showClose: true 
+                            });
+                        } else {
+                            // 其他原因
+                            this.$message.warning({ 
+                                message: data.message || '无法观看该视频', 
+                                showClose: true 
+                            });
+                        }
+                    } else {
+                        // 可以观看
+                        // 如果后端返回了maxWatchTime，使用后端返回的值（用于无版权视频30秒限制）
+                        if (data.maxWatchTime !== undefined && data.maxWatchTime !== null) {
+                            this.maxWatchTime = data.maxWatchTime;
+                        } else if (this.videoType === 'NO_COPYRIGHT') {
+                            // 如果没有返回maxWatchTime但视频类型是无版权，设置30秒限制（管理员情况）
+                            this.maxWatchTime = null; // 管理员可以观看完整视频，不设置限制
+                        }
+                    }
+                    
+                    // 检查是否已举报
+                    if (this.userInfo) {
+                        try {
+                            const reportCheck = await authService.checkReport(movieId);
+                            this.hasReported = reportCheck.data?.hasReported || false;
+                        } catch (e) {
+                            console.error('检查举报状态失败', e);
+                        }
+                    }
                 }
 
                 if (response.status == 401) {
-                    this.$message.warning({ message: '登录已过期，请重新登录401', showClose: true })
+                    this.$message.warning({ message: '登录已过期，请重新登录', showClose: true })
                 }
             } catch (error) {
                 console.error(error)
-                if (error.response.status == 403 || error.isUnauthorizedError == true) {
+                if (error.response && error.response.status == 403 || error.isUnauthorizedError == true) {
                     this.$message.warning({ message: '视频为VIP视频，升级会员即可观看全片', showClose: true })
                 }
             }
 
+        },
+        
+        // 处理举报按钮点击
+        handleReportClick() {
+            if (!this.userInfo) {
+                this.$message.warning({ message: '请先登录后再举报', showClose: true });
+                return;
+            }
+            this.showReportDialog = true;
+        },
+        
+        // 提交举报
+        async submitReport() {
+            if (!this.reportForm.reportType || !this.reportForm.reportDescription) {
+                this.$message.warning({ message: '请填写完整的举报信息', showClose: true });
+                return;
+            }
+            
+            if (!this.userInfo) {
+                this.$message.warning({ message: '请先登录', showClose: true });
+                return;
+            }
+            
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const movieId = urlParams.get("movieId");
+                
+                const reportData = {
+                    videoId: parseInt(movieId),
+                    reportType: this.reportForm.reportType,
+                    reportDescription: this.reportForm.reportDescription
+                };
+                
+                const response = await authService.submitReport(reportData);
+                if (response.status === 200) {
+                    this.$message.success({ message: '举报提交成功，我们会尽快处理', showClose: true });
+                    this.showReportDialog = false;
+                    this.hasReported = true;
+                    this.reportForm = { reportType: '', reportDescription: '' };
+                }
+            } catch (error) {
+                console.error('提交举报失败', error);
+                if (error.response && error.response.data) {
+                    this.$message.error({ message: error.response.data || '举报提交失败', showClose: true });
+                }
+            }
+        },
+        
+        // 跳转到源视频链接
+        goToSourceVideo() {
+            if (this.sourceVideoUrl) {
+                window.open(this.sourceVideoUrl, '_blank');
+            } else {
+                this.$message.warning({ message: '暂无正版链接', showClose: true });
+            }
         },
 
         //  加载更多评论
@@ -637,7 +813,18 @@ export default {
 
         // 处理视频时间更新事件
         handleTimeUpdate() {
-            const currentTime = this.video.currentTime
+            const video = this.$refs.videoRef || this.video;
+            if (!video) return;
+            
+            const currentTime = video.currentTime;
+            
+            // 30秒限制检查（无版权视频）
+            if (this.maxWatchTime && currentTime >= this.maxWatchTime) {
+                video.pause();
+                this.showTimeLimitOverlay = true;
+                return;
+            }
+            
             // 对弹幕数据按时间排序
             const sortedDanmakus = this.danmakus.sort((a, b) => a.time - b.time);
             //  过滤出当前时间需要显示的弹幕
@@ -820,8 +1007,8 @@ export default {
             if (currentVideo) {
                 this.videoName = currentVideo.videoName;
                 this.videoTitle = currentVideo.videoTitle;
-                this.VIP = currentVideo.videoIsVip;
-                console.log('currentVideo:  ' + JSON.stringify(this.VIP))
+                this.videoType = currentVideo.videoType;
+                console.log('currentVideo:  ' + JSON.stringify(this.videoType))
             }
         },
 
@@ -1291,6 +1478,7 @@ video {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 8px 0;
@@ -1520,7 +1708,7 @@ video {
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     padding: 24px 28px 18px 28px;
-    margin: 24px 0 16px 0;
+    /* margin: 24px 0 16px 0; */
 }
 
 .video-info-header {
@@ -1550,6 +1738,18 @@ video {
 
 .video-badge.free {
     background: linear-gradient(90deg, #00d4aa 0%, #00b894 100%);
+}
+
+.video-badge.paid {
+    background: linear-gradient(90deg, #ffa726 0%, #fb8c00 100%);
+}
+
+.video-badge.no-copyright {
+    background: linear-gradient(90deg, #9e9e9e 0%, #757575 100%);
+}
+
+.video-badge.exclusive {
+    background: linear-gradient(90deg, #ab47bc 0%, #8e24aa 100%);
 }
 
 .video-info-tags {
@@ -1688,6 +1888,18 @@ video {
 
 .album-video-badge.free {
     background: linear-gradient(90deg, #00d4aa 0%, #00b894 100%);
+}
+
+.album-video-badge.paid {
+    background: linear-gradient(90deg, #ffa726 0%, #fb8c00 100%);
+}
+
+.album-video-badge.no-copyright {
+    background: linear-gradient(90deg, #9e9e9e 0%, #757575 100%);
+}
+
+.album-video-badge.exclusive {
+    background: linear-gradient(90deg, #ab47bc 0%, #8e24aa 100%);
 }
 
 .album-video-thumbnail {

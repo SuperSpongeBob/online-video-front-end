@@ -14,8 +14,8 @@
                 <!-- 视频卡片内容 -->
                 <div v-else>
                     <!-- VIP/免费标签 -->
-                    <div :class="['video-badge', movie.videoIsVip === 2 ? 'vip' : 'free']">
-                        {{ movie.videoIsVip === 2 ? "VIP" : "免费" }}
+                    <div :class="['video-badge', getVideoTypeClass(movie.videoType || movie.videoIsVip)]">
+                        {{ getVideoTypeText(movie.videoType || movie.videoIsVip) }}
                     </div>
 
                     <!-- 视频缩略图 -->
@@ -48,7 +48,7 @@
                         <!-- 标签区域 -->
                         <div class="video-tags">
                             <span class="video-tag">{{ movie.videoChannel || '未知分类' }}</span>
-                            <span class="video-tag">{{ movie.videoIsVip === 2 ? 'VIP专享' : '免费观看' }}</span>
+                            <span class="video-tag">{{ getVideoTypeTag(movie.videoType || movie.videoIsVip) }}</span>
                             <span v-if="movie.viewCount > 10000" class="video-tag">热门</span>
                         </div>
                     </div>
@@ -60,6 +60,7 @@
 
 <script>
 import authService from "../../utils/authService";
+import { getVideoTypeText, getVideoTypeClass, getVideoTypeTag } from '../../utils/videoTypeUtils';
 import fallbackImage from '../../assets/Damaged.png'
 import '../../assets/videoCard.css' // 引入新样式
 
@@ -135,6 +136,9 @@ export default {
         handleError(event) {
             event.target.src = fallbackImage
         },
+        getVideoTypeText,
+        getVideoTypeClass,
+        getVideoTypeTag,
         async updateMovies() {
             if (this.req.isLoading) return;
             this.req.isLoading = true;

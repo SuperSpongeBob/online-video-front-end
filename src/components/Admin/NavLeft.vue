@@ -51,6 +51,12 @@
                                         <View />
                                     </el-icon>待审核视频</el-menu-item>
                             </router-link>
+                            
+                            <router-link to="/Admin/ReportCheck">
+                                <el-menu-item index="2-3"><el-icon>
+                                        <Warning />
+                                    </el-icon>待处理举报</el-menu-item>
+                            </router-link>
                         </el-sub-menu>
 
 
@@ -99,6 +105,9 @@ export default {
                 break;
             case '2-2':
                 this.$router.push('/Admin/Check');
+                break;
+            case '2-3':
+                this.$router.push('/Admin/ReportCheck');
                 break;
             default:
                 this.$router.push('/Admin/User'); // 默认跳转到用户管理页面

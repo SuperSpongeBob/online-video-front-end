@@ -45,10 +45,13 @@
                 <el-form-item label="视频标题">
                     <el-input v-model="video.videoTitle" placeholder="视频标题" clearable></el-input>
                 </el-form-item>
-                <el-form-item label="VIP视频">
-                    <el-select v-model="video.videoIsVip" placeholder="请选择">
-                        <el-option label="VIP" value="2"></el-option>
-                        <el-option label="免费" value="1"></el-option>
+                <el-form-item label="视频类型">
+                    <el-select v-model="video.videoType" placeholder="请选择">
+                        <el-option label="免费" value="免费"></el-option>
+                        <el-option label="收费" value="收费"></el-option>
+                        <el-option label="VIP" value="VIP"></el-option>
+                        <el-option label="无版权" value="无版权"></el-option>
+                        <el-option label="独播" value="独播"></el-option>
                     </el-select>
                 </el-form-item>
 
@@ -106,8 +109,8 @@
                 <div class="video-grid" style="margin-bottom: 16px;">
                     <div class="video-card" style="width: 280px;">
                         <!-- VIP/免费标签 -->
-                        <div :class="['video-badge', video.videoIsVip == 2 ? 'vip' : 'free']">
-                            {{ video.videoIsVip == 2 ? "VIP" : "免费" }}
+                        <div :class="['video-badge', getVideoTypeClass(video.videoType)]">
+                            {{ getVideoTypeText(video.videoType) }}
                         </div>
                         <!-- 视频缩略图 -->
                         <div class="video-thumbnail">
@@ -119,7 +122,7 @@
                             <div class="video-description">{{ video.videoTitle }}</div>
                             <div class="video-tags">
                                 <span class="video-tag">{{ videoAlbum.videoChannel || '未知分类' }}</span>
-                                <span class="video-tag">{{ video.videoIsVip == 2 ? 'VIP专享' : '免费观看' }}</span>
+                                <span class="video-tag">{{ getVideoTypeTag(video.videoType) }}</span>
                             </div>
                         </div>
                     </div>
@@ -163,6 +166,7 @@ import axios from "axios";
 import { ElUpload, ElProgress, ElMessage } from "element-plus";
 import { ref } from "vue";
 import authService from "../../utils/authService";
+import { getVideoTypeText, getVideoTypeClass, getVideoTypeTag } from '../../utils/videoTypeUtils';
 import '../../assets/videoCard.css'
 
 export default {
@@ -175,7 +179,7 @@ export default {
             loading: false,
             video: {
                 videoId: "",                    //  暂时没有他的用武之地
-                videoIsVip: "1",                 //  默认视频为免费，为“ 2 ”时：VIP
+                videoType: "免费",                 //  默认视频为免费
                 videoName: "",                  //  视频名称
                 videoTitle: "",                 //  视频标题
                 thumbnailPath: "",               //  暂时用于存储
@@ -414,6 +418,11 @@ export default {
         blackIndex() {
             this.$router.push('/index')
         },
+        
+        // 视频类型工具方法
+        getVideoTypeText,
+        getVideoTypeClass,
+        getVideoTypeTag,
     },
 
     mounted() {
@@ -506,7 +515,7 @@ export default {
             videoUploadRequest: {
                 video: {
                     videoId: 1,
-                    videoIsVip: 1,
+                    videoType: "免费",
                     videoName: "视频名称",
                     videoTitle: "视频标题"
                 },
@@ -766,7 +775,7 @@ export default {
         return {
             video: {
                 videoId: 1,
-                videoIsVip: 1,
+                videoType: "免费",
                 videoName: "视频名称",
                 videoTitle: "视频标题"
             },

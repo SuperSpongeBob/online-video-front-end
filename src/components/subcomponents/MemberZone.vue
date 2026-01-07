@@ -2,7 +2,7 @@
     <div class="member-zone-root">
         <!-- 你可以在这里加头部、导航等其它内容 -->
         <div class="member-zone-content">
-            <VideoList :video-is-vip="videoIsVip" />
+            <VideoList :video-type="videoType" />
         </div>
     </div>
 </template>
@@ -13,7 +13,7 @@ export default {
     components: { VideoList },
     data() {
         return {
-            videoIsVip: "2"
+            videoType: "VIP"
         }
     }
 }

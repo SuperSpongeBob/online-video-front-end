@@ -115,6 +115,16 @@ const router = createRouter({
                             component: () => import('./components/PersonalCenter/subcomponents/History.vue')
                         }
                     ]
+                },
+                {
+                    path: 'reportRecord',
+                    component: { render: () => h(RouterView) },
+                    children: [
+                        {
+                            path: '',
+                            component: () => import('./components/PersonalCenter/subcomponents/ReportRecord.vue')
+                        }
+                    ]
                 }
             ]
         },
@@ -143,7 +153,11 @@ const router = createRouter({
                     component: { render: () => h(RouterView) },
                     component: () => import('./components/Admin/SubComponents/Check.vue')
                 },
-
+                {
+                    path: 'ReportCheck', name: 'ReportCheck',
+                    component: { render: () => h(RouterView) },
+                    component: () => import('./components/Admin/SubComponents/ReportCheck.vue')
+                },
                 {
                     path: 'Security', name: 'Security',
                     component: { render: () => h(RouterView) },

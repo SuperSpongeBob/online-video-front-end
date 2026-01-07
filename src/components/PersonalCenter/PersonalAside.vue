@@ -53,6 +53,12 @@
                                     </el-icon>历史记录</el-menu-item>
                             </router-link>
 
+                            <router-link class="alink" to="/PersonalCenterIndex/ReportRecord">
+                                <el-menu-item index="2-3"><el-icon>
+                                        <Warning />
+                                    </el-icon>举报记录</el-menu-item>
+                            </router-link>
+
                         </el-sub-menu>
 
                     </el-menu>
@@ -71,6 +77,8 @@ import {
     Search,
     Star,
     User,
+    VideoCamera,
+    Warning,
 } from '@element-plus/icons-vue'
 
 export default {
@@ -108,6 +116,9 @@ export default {
                 break;
             case '2-2':
                 this.$router.push('/PersonalCenterIndex/History');
+                break;
+            case '2-3':
+                this.$router.push('/PersonalCenterIndex/ReportRecord');
                 break;
             default:
                 this.$router.push('/PersonalCenterIndex/BasicInformation'); // 默认跳转到用户管理页面

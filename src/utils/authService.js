@@ -307,4 +307,27 @@ export default {
     async adminUpdateAlbum(albumData) {
         return await http.post('/api/admin/updateAlbum', albumData)
     },
+
+    //  Video Report
+    async submitReport(reportData) {
+        return await http.post('/api/submitReport', reportData)
+    },
+
+    async checkReport(videoId) {
+        return await http.get(`/api/checkReport?videoId=${videoId}`)
+    },
+
+    async getMyReports(userId) {
+        return await http.get(`/api/myReports?userId=${userId}`)
+    },
+
+    // Admin: 获取所有举报记录
+    async adminGetReports(reportQuery) {
+        return await http.post('/api/admin/reports', reportQuery)
+    },
+
+    // Admin: 处理举报
+    async handleReport(handleData) {
+        return await http.post('/api/admin/handleReport', handleData)
+    },
 };

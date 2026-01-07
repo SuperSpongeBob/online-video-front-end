@@ -11,9 +11,9 @@
                     {{ formatDuration(row.duration) }}
                 </template>
             </el-table-column>
-            <el-table-column prop="videoIsVip" label="视频类型" width="100" show-overflow-tooltip>
+            <el-table-column prop="videoType" label="视频类型" width="100" show-overflow-tooltip>
                 <template #default="scope">
-                    <span>{{ getRule(scope.row.videoIsVip) }}</span>
+                    <span>{{ getVideoTypeText(scope.row.videoType || scope.row.videoIsVip) }}</span>
                 </template>
             </el-table-column>
             <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
@@ -66,6 +66,7 @@
 <script>
 import { ref } from 'vue';
 import authService from '../../../utils/authService';
+import { getVideoTypeText, getVideoTypeClass } from '../../../utils/videoTypeUtils';
 
 
 export default {
@@ -105,20 +106,12 @@ export default {
             }
         },
 
-        //  根据数据显示对应的状态
+        //  根据数据显示对应的状态（已废弃，使用getVideoTypeText代替）
         getRule(videoIsVip) {
-            console.log(videoIsVip)
-            switch (videoIsVip) {
-                case '0':
-                    return "免费";
-                case '1':
-                    return "免费";
-                case '2':
-                    return "VIP";
-                default:
-                    return ""
-            }
+            return getVideoTypeText(videoIsVip);
         },
+        getVideoTypeText,
+        getVideoTypeClass,
 
         // 格式化时长
         formatDuration(seconds) {
@@ -276,7 +269,8 @@ export default {
             //  将数据映射到videoData中
             this.videoData = response.data.map(item => ({
                 videoId: item.videoId,
-                videoIsVip: item.videoIsVip.toString(),
+                videoType: item.videoType || (item.videoIsVip ? (item.videoIsVip === 2 ? 'VIP' : '免费') : '免费'),
+                videoIsVip: item.videoIsVip ? item.videoIsVip.toString() : '', // 保留用于兼容
                 videoAlbumId: item.videoAlbumId,
                 videoName: item.videoName,
                 videoApprovalStatus: item.videoApprovalStatus,

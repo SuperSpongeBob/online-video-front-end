@@ -15,8 +15,9 @@
             <div v-for="video in historyList" :key="video.historyId" class="video-item">
                 <div class="thumbnail">
                     <img :src="video.url" alt="封面" />
-                    <span v-if="video.videoIsVip === 1" class="vip-tag free">免费</span>
-                    <span v-if="video.videoIsVip === 2" class="vip-tag vip">VIP</span>
+                    <span :class="['vip-tag', getVideoTypeClass(video.videoType || video.videoIsVip)]">
+                        {{ getVideoTypeText(video.videoType || video.videoIsVip) }}
+                    </span>
                     <span class="watched">已看{{ ((video.watchedSeconds / video.duration) * 100).toFixed(1) }}%</span>
                     <span class="duration">{{ formatDuration(video.duration) }}</span>
                 </div>
@@ -47,6 +48,7 @@
 <script>
 import authService from '../../../utils/authService'
 import { formatDate } from '../../../utils/dateUtils'
+import { getVideoTypeText, getVideoTypeClass } from '../../../utils/videoTypeUtils'
 
 export default {
     data() {
@@ -106,6 +108,8 @@ export default {
 
         //  格式化时间戳
         formatDate: formatDate,
+        getVideoTypeText,
+        getVideoTypeClass,
 
         // 清空历史
         async clearHistory() {

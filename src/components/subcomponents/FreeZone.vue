@@ -2,7 +2,7 @@
     <div class="free-zone-root">
         <!-- 可以在这里加头部、导航等其它内容 -->
         <div class="free-zone-content">
-            <VideoList :video-is-vip="videoIsVip" />
+            <VideoList :video-type="videoType" />
         </div>
     </div>
 </template>
@@ -13,7 +13,7 @@ export default {
     components: { VideoList },
     data() {
         return {
-            videoIsVip: "1"
+            videoType: "免费"
         }
     }
 }

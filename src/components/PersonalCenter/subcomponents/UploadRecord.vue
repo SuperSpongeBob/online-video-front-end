@@ -1,82 +1,130 @@
 <template>
-    <el-divider content-position="center">历史专辑</el-divider>
-
-    <el-card>
-        <el-table :data="albumData" style="width: 99%" max-height="330" border stripe>
-            <el-table-column fixed="left" prop="videoAlbumId" label="专辑id" width="70" />
-            <el-table-column prop="videoAlbumName" label="专辑名" width="120" header-align="center" />
-            <el-table-column prop="videoReleaseDate" label="上映日期" width="100" show-overflow-tooltip />
-            <el-table-column prop="videoSummary" label="专辑简介" show-overflow-tooltip />
-            <el-table-column prop="videoDirector" label="导演" width="100" />
-            <el-table-column prop="videoChannel" label="频道" width="60" />
-            <el-table-column prop="videoArea" label="地区" width="60" />
-            <el-table-column prop="videoActor" label="演员" width="120" />
-            <el-table-column prop="videoLastUpdate" label="最新集数" width="90" />
-            <el-table-column prop="videoFavoriteNumber" label="收藏量" width="70" show-overflow-tooltip />
-            <el-table-column prop="videoUpdateTime" label="更新时间" width="90" show-overflow-tooltip />
-            <el-table-column prop="videoPostPath" label="海报" width="120" header-align="center">
-                <template v-slot="scope">
-                    <el-upload :show-file-list="false" :before-upload="beforeUploadPost"
-                        :on-change="(file) => handlePostChange(file, scope.row)" :auto-upload="false" accept="image/*">
-                        <el-image style="max-width: 100px;max-height: 100px; object-fit: contain;"
-                            :src="scope.row.videoPostPath"></el-image>
-                    </el-upload>
-                </template>
-            </el-table-column>
-            <el-table-column fixed="right" label="操作" width="150" header-align="center">
-
-                <template #default="scope">
-                    <el-button link type="primary" @click="editAlbum(scope.row)">编辑</el-button>
-                    <el-popover placement="bottom-start" :width="900" trigger="click">
-                        <template #reference>
-
-                            <el-button link type="primary" @click="viewDetail(scope.row)">详情</el-button>
+    <el-tabs v-model="activeTab">
+        <!-- 历史专辑标签页 -->
+        <el-tab-pane label="历史专辑" name="album">
+            <el-card shadow="never" style="border: none;">
+                <el-table :data="albumData" style="width: 100%" max-height="750" border stripe>
+                    <el-table-column fixed="left" prop="videoAlbumId" label="专辑id" width="70" />
+                    <el-table-column prop="videoAlbumName" label="专辑名" width="120" header-align="center" />
+                    <el-table-column prop="videoReleaseDate" label="上映日期" width="100" show-overflow-tooltip />
+                    <el-table-column prop="videoSummary" label="专辑简介" show-overflow-tooltip />
+                    <el-table-column prop="videoDirector" label="导演" width="100" />
+                    <el-table-column prop="videoChannel" label="频道" width="60" />
+                    <el-table-column prop="videoArea" label="地区" width="60" />
+                    <el-table-column prop="videoActor" label="演员" width="120" />
+                    <el-table-column prop="videoLastUpdate" label="最新集数" width="90" />
+                    <el-table-column prop="videoFavoriteNumber" label="收藏量" width="70" show-overflow-tooltip />
+                    <el-table-column prop="videoUpdateTime" label="更新时间" width="90" show-overflow-tooltip />
+                    <el-table-column prop="videoPostPath" label="海报" width="120" header-align="center">
+                        <template v-slot="scope">
+                            <el-upload :show-file-list="false" :before-upload="beforeUploadPost"
+                                :on-change="(file) => handlePostChange(file, scope.row)" :auto-upload="false" accept="image/*">
+                                <el-image style="max-width: 100px;max-height: 100px; object-fit: contain;"
+                                    :src="scope.row.videoPostPath"></el-image>
+                            </el-upload>
                         </template>
-                        <el-table :data="popoverVideoData" max-height="240" border stripe>
-                            <el-table-column fixed="left" width="50" property="videoId" label="id" />
-                            <el-table-column width="150" property="videoName" label="视频名称" />
-                            <el-table-column width="250" property="videoTitle" label="标题" />
-                            <el-table-column width="100" property="duration" label="视频时长">
-                                <template #default="{ row }">
-                                    {{ formatDuration(row.duration) }}
+                    </el-table-column>
+                    <el-table-column fixed="right" label="操作" width="150" header-align="center">
+                        <template #default="scope">
+                            <el-button link type="primary" @click="editAlbum(scope.row)">编辑</el-button>
+                            <el-popover placement="bottom-start" :width="900" trigger="click">
+                                <template #reference>
+                                    <el-button link type="primary" @click="viewDetail(scope.row)">详情</el-button>
                                 </template>
-                            </el-table-column>
-                            <el-table-column prop="videoIsVip" label="视频类型" width="90" show-overflow-tooltip>
-                                <template #default="{ row }">
-                                    <span>{{ getRule(row.videoIsVip) }}</span>
-                                </template>
-                            </el-table-column>
-                            <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
-                                <template #default="scope">
-                                    <span :style="getStatusColor(scope.row.videoApprovalStatus)">{{
-                                        scope.row.videoApprovalStatus }}</span>
-                                </template>
-                            </el-table-column>
-                            <el-table-column fixed="right" label="Operations" width="200">
-                                <template #default="scope">
-                                    <el-button link type="primary" @click="playVideo(scope.row)">播放视频</el-button>
-                                    <el-popconfirm title="Are you sure to delete this?"
-                                        @confirm="deleteVideo(scope.row)">
-                                        <template #reference>
-                                            <el-button link type="danger">下架视频</el-button>
+                                <el-table :data="popoverVideoData" max-height="240" border stripe>
+                                    <el-table-column fixed="left" width="50" property="videoId" label="id" />
+                                    <el-table-column width="150" property="videoName" label="视频名称" />
+                                    <el-table-column width="250" property="videoTitle" label="标题" />
+                                    <el-table-column width="100" property="duration" label="视频时长">
+                                        <template #default="{ row }">
+                                            {{ formatDuration(row.duration) }}
                                         </template>
-                                    </el-popconfirm>
+                                    </el-table-column>
+                                    <el-table-column prop="videoType" label="视频类型" width="90" show-overflow-tooltip>
+                                        <template #default="{ row }">
+                                            <span>{{ getVideoTypeText(row.videoType || row.videoIsVip) }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
+                                        <template #default="scope">
+                                            <span :style="getStatusColor(scope.row.videoApprovalStatus)">{{
+                                                scope.row.videoApprovalStatus }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column fixed="right" label="Operations" width="200">
+                                        <template #default="scope">
+                                            <el-button link type="primary" @click="playVideo(scope.row)">播放视频</el-button>
+                                            <el-popconfirm title="Are you sure to delete this?"
+                                                @confirm="deleteVideo(scope.row)">
+                                                <template #reference>
+                                                    <el-button link type="danger">下架视频</el-button>
+                                                </template>
+                                            </el-popconfirm>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </el-popover>
+                            <el-popconfirm title="Are you sure to delete this?" @confirm="deleteAlbum(scope.row)">
+                                <template #reference>
+                                    <el-button link type="danger">删除</el-button>
                                 </template>
-                            </el-table-column>
-                        </el-table>
-
-                    </el-popover>
-
-                    <el-popconfirm title="Are you sure to delete this?" @confirm="deleteAlbum(scope.row)">
-                        <template #reference>
-                            <el-button link type="danger">删除</el-button>
+                            </el-popconfirm>
                         </template>
-                    </el-popconfirm>
-                </template>
+                    </el-table-column>
+                </el-table>
+            </el-card>
+        </el-tab-pane>
 
-            </el-table-column>
-        </el-table>
-    </el-card>
+        <!-- 历史视频标签页 -->
+        <el-tab-pane label="历史视频" name="video">
+            <el-card shadow="never" style="border: none;">
+                <el-table :data="videoData" style="width: 100%;" max-height="750" border stripe>
+                    <el-table-column fixed="left" width="50" property="videoId" label="id" header-align="center" />
+                    <el-table-column width="180" property="videoName" label="视频名称" header-align="center" />
+                    <el-table-column property="videoTitle" label="标题" header-align="center" />
+                    <el-table-column width="80" property="viewCount" label="播放量" />
+                    <el-table-column width="100" property="duration" label="视频时长">
+                        <template #default="{ row }">
+                            {{ formatDuration(row.duration) }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="videoType" label="视频类型" width="90" show-overflow-tooltip>
+                        <template #default="{ row }">
+                            <span>{{ getVideoTypeText(row.videoType || row.videoIsVip) }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
+                        <template #default="scope">
+                            <span :style="getStatusColor(scope.row.videoApprovalStatus)">{{ scope.row.videoApprovalStatus
+                            }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column property="thumbnailPath" label="缩略图" width="120" header-align="center">
+                        <template v-slot="scope">
+                            <el-upload :show-file-list="false" :before-upload="beforeUploadPost"
+                                :on-change="(file) => handleThumbnailChange(file, scope.row)" :auto-upload="false"
+                                accept="image/*">
+                                <el-image style="max-width: 100px;max-height: 100px;" :src="scope.row.thumbnailPath"></el-image>
+                            </el-upload>
+                        </template>
+                    </el-table-column>
+                    <el-table-column fixed="right" label="Operations" width="200" header-align="center">
+                        <template #default="scope">
+                            <el-button link type="primary" @click="editVideo(scope.row)">编辑</el-button>
+                            <el-button link type="primary" @click="playVideo(scope.row)">播放</el-button>
+                            <el-popconfirm title="Are you sure to delete this?" @confirm="deleteVideo(scope.row)">
+                                <template #reference>
+                                    <el-button link type="danger">下架</el-button>
+                                </template>
+                            </el-popconfirm>
+                            <el-button link type="primary"
+                                @click="getDanmakus(scope.row); getComments(); dialogComment = true; pageNum = 1">评论</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-card>
+        </el-tab-pane>
+    </el-tabs>
 
     <el-dialog v-model="editAlbumDialog" title="编辑专辑信息" width="500" draggable overflow align-center>
         <el-form ref="dialogAlbumData" :model="dialogAlbumData" label-width="100px">
@@ -120,55 +168,6 @@
         </template>
     </el-dialog>
 
-    <el-divider content-position="center">历史视频</el-divider>
-
-    <el-card>
-        <el-table :data="videoData" style="width: 99%;" max-height="330" border stripe>
-            <el-table-column fixed="left" width="50" property="videoId" label="id" header-align="center" />
-            <el-table-column width="180" property="videoName" label="视频名称" header-align="center" />
-            <el-table-column property="videoTitle" label="标题" header-align="center" />
-            <el-table-column width="80" property="viewCount" label="播放量" />
-            <el-table-column width="100" property="duration" label="视频时长">
-                <template #default="{ row }">
-                    {{ formatDuration(row.duration) }}
-                </template>
-            </el-table-column>
-            <el-table-column prop="videoIsVip" label="视频类型" width="90" show-overflow-tooltip>
-                <template #default="{ row }">
-                    <span>{{ getRule(row.videoIsVip) }}</span>
-                </template>
-            </el-table-column>
-            <el-table-column width="100" property="videoApprovalStatus" label="审核状态">
-                <template #default="scope">
-                    <span :style="getStatusColor(scope.row.videoApprovalStatus)">{{ scope.row.videoApprovalStatus
-                    }}</span>
-                </template>
-            </el-table-column>
-            <el-table-column property="thumbnailPath" label="缩略图" width="120" header-align="center">
-                <template v-slot="scope">
-                    <el-upload :show-file-list="false" :before-upload="beforeUploadPost"
-                        :on-change="(file) => handleThumbnailChange(file, scope.row)" :auto-upload="false"
-                        accept="image/*">
-                        <el-image style="max-width: 100px;max-height: 100px;" :src="scope.row.thumbnailPath"></el-image>
-                    </el-upload>
-                </template>
-            </el-table-column>
-            <el-table-column fixed="right" label="Operations" width="200" header-align="center">
-                <template #default="scope">
-                    <el-button link type="primary" @click="editVideo(scope.row)">编辑</el-button>
-                    <el-button link type="primary" @click="playVideo(scope.row)">播放</el-button>
-                    <el-popconfirm title="Are you sure to delete this?" @confirm="deleteVideo(scope.row)">
-                        <template #reference>
-                            <el-button link type="danger">下架</el-button>
-                        </template>
-                    </el-popconfirm>
-                    <el-button link type="primary"
-                        @click="getDanmakus(scope.row); getComments(); dialogComment = true; pageNum = 1">评论</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-    </el-card>
-
     <el-dialog v-model="centerDialogVisible" width="1000" align-center>
         <video id="myVideo" controls controlsList="nodownload" :src="url"
             style="width: 100%; height: 60%;object-fit: contain;max-width: 90vw;max-height: 80vh;;">
@@ -208,9 +207,12 @@
                 <el-input v-model="dialogVideoData.videoTitle" maxlength="100" placeholder="标题" clearable />
             </el-form-item>
             <el-form-item label="视频类型">
-                <el-select v-model="dialogVideoData.videoIsVip" placeholder="视频类型" clearable>
-                    <el-option label="免费" value="1" />
-                    <el-option label="VIP" value="2" />
+                <el-select v-model="dialogVideoData.videoType" placeholder="视频类型" clearable>
+                    <el-option label="免费" value="免费" />
+                    <el-option label="收费" value="收费" />
+                    <el-option label="VIP" value="VIP" />
+                    <el-option label="无版权" value="无版权" />
+                    <el-option label="独播" value="独播" />
                 </el-select>
             </el-form-item>
         </el-form>
@@ -258,10 +260,12 @@
 <script>
 import { ref } from 'vue';
 import authService from '../../../utils/authService';
+import { getVideoTypeText, getVideoTypeClass } from '../../../utils/videoTypeUtils';
 
 export default {
     data() {
         return {
+            activeTab: 'album',                          //  当前激活的标签页
             video: {
                 userId: "",
                 videoAlbumId: "",
@@ -303,19 +307,12 @@ export default {
             }
         },
 
-        //  根据数据显示对应的状态
+        //  根据数据显示对应的状态（已废弃，使用getVideoTypeText代替）
         getRule(videoIsVip) {
-            switch (videoIsVip) {
-                case '0':
-                    return "免费";
-                case '1':
-                    return "免费";
-                case '2':
-                    return "VIP";
-                default:
-                    return ""
-            }
+            return getVideoTypeText(videoIsVip);
         },
+        getVideoTypeText,
+        getVideoTypeClass,
 
         // 格式化时长
         formatDuration(seconds) {
@@ -575,7 +572,8 @@ export default {
             this.videoData = response.data.map(item => ({
                 videoId: item.videoId,
                 videoAlbumId: item.videoAlbumId,
-                videoIsVip: item.videoIsVip.toString(),
+                videoType: item.videoType || (item.videoIsVip ? (item.videoIsVip === 2 ? 'VIP' : '免费') : '免费'),
+                videoIsVip: item.videoIsVip ? item.videoIsVip.toString() : '', // 保留用于兼容
                 videoName: item.videoName,
                 videoApprovalStatus: item.videoApprovalStatus,
                 videoTitle: item.videoTitle,
@@ -661,80 +659,3 @@ export default {
     }
 }
 </script>
-
-
-
-
-
-
-
-<!-- <template>
-    <el-card>
-        <h3>历史专辑</h3>
-        <el-table :data="tableData" style="width: 100%" max-height="250">
-            <el-table-column fixed="left" prop="videoAlbumName" label="Name" width="180" />
-            <el-table-column prop="id" label="id" width="120" />
-            <el-table-column prop="videoLastUpdate" label="最新集数" width="120" />
-            <el-table-column prop="videoDirector" label="Director" width="120" />
-            <el-table-column prop="videoChannel" label="Channel" width="120" />
-            <el-table-column prop="videoArea" label="Area" width="120" />
-            <el-table-column prop="videoActor" label="Actor" width="180" />
-            <el-table-column fixed="right" label="Operations" width="180">
-                <template #default="scope">
-                    <el-button link type="primary" @click="editItem(scope.row)">Select</el-button>
-                    <el-button link type="primary" @click="deleteItem(scope.row)">Delete</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-    </el-card>
-</template>
-
-<script>
-import axios from 'axios';
-import { ref } from 'vue';
-
-
-export default {
-    data() {
-        return {
-            tempVAData: ref([]),
-            tableData: ref([]),
-            videoAlbum: {
-                userId: ""
-            }
-        }
-    },
-    methods: {
-        editItem(row){
-            console.log(row.id)
-        },
-        async getVideoAlbum() {
-            // const userId = 41
-            this.videoAlbum.userId = 41
-            try {
-                const response = await axios.post(`http://localhost:8080/api/videoAlbums`, this.videoAlbum);
-                console.log(response.data)
-                //   responseData.value=response.data
-                this.tempVAData = response.data
-                this.tableData = response.data.map(item => ({
-                    id: item.videoAlbumId,
-                    videoLastUpdate: item.videoLastUpdate,
-                    videoReleaseDate: item.videoReleaseDate,
-                    videoAlbumName: item.videoAlbumName,
-                    videoDirector: item.videoDirector,
-                    videoChannel: item.videoChannel,
-                    videoArea: item.videoArea,
-                    videoActor: item.videoActor,
-                    id: item.videoAlbumId
-                }));
-                console.log(this.tableData)
-            } catch (error) {
-                console.error(error)
-            }
-        }
-    },
-    mounted() {
-        this.getVideoAlbum()
-    }
-}
-</script> -->
