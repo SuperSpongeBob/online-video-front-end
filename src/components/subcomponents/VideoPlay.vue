@@ -144,6 +144,18 @@
                                     <el-button link v-if="userInfo && comment.userId == userInfo.userId"
                                         @click="deleteComment(comment.videoCommentId)" size="small">删除</el-button>
                                     <el-button link @click="replyToComment(comment)" size="small">回复</el-button>
+                                    <el-button 
+                                        link 
+                                        @click="handleAIReplyClick(comment)" 
+                                        size="small"
+                                        :loading="aiReplyLoading[comment.videoCommentId]"
+                                        :disabled="aiReplyLoading[comment.videoCommentId]"
+                                        style="color: #409EFF;">
+<!--                                        <el-icon v-if="!aiReplyLoading[comment.videoCommentId]" style="margin-right: 2px;">
+                                            <ChatDotRound />
+                                        </el-icon>-->
+                                        {{ aiReplyLoading[comment.videoCommentId] ? '生成中...' : 'AI 回复' }}
+                                    </el-button>
                                 </div>
                             </div>
 
@@ -168,7 +180,18 @@
                                             @click="deleteComment(reply.videoCommentId)" size="small">删除</el-button>
                                         <el-button link @click="replyToComment(comment, reply)"
                                             size="small">回复</el-button>
-
+                                        <el-button 
+                                            link 
+                                            @click="handleAIReplyClick(comment, reply)" 
+                                            size="small"
+                                            :loading="aiReplyLoading[reply.videoCommentId]"
+                                            :disabled="aiReplyLoading[reply.videoCommentId]"
+                                            style="color: #409EFF;">
+<!--                                            <el-icon v-if="!aiReplyLoading[reply.videoCommentId]" style="margin-right: 2px;">
+                                                <ChatDotRound />
+                                            </el-icon>-->
+                                            {{ aiReplyLoading[reply.videoCommentId] ? '生成中...' : 'AI 回复' }}
+                                        </el-button>
                                     </div>
                                 </div>
                             </div>
@@ -273,14 +296,15 @@
 import authService from '../../utils/authService';
 import { formatDate } from '../../utils/dateUtils';
 import { getVideoTypeText, getVideoTypeClass, getVideoTypeTag } from '../../utils/videoTypeUtils';
-import { View, ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
+import { View, ArrowLeft, ArrowRight, ChatDotRound } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 export default {
     components: {
         View,
         ArrowLeft,
-        ArrowRight
+        ArrowRight,
+        ChatDotRound
     },
     data() {
         return {
@@ -348,6 +372,10 @@ export default {
             sourceVideoUrl: null, // 源视频链接
             maxWatchTime: null, // 最大观看时间（秒），用于无版权视频限制
             showTimeLimitOverlay: false, // 显示30秒限制遮罩
+            
+            // AI 回复相关
+            aiReplyLoading: {}, // 跟踪每个评论的 AI 回复加载状态
+            aiReplyError: {},   // 跟踪每个评论的 AI 回复错误状态
         };
 
     },
@@ -1186,6 +1214,143 @@ export default {
                 return null;
             }
             return dfs(rootComment);
+        },
+
+        // AI 回复相关方法
+        
+        // 设置 AI 回复加载状态
+        setAIReplyLoading(commentId, loading) {
+            this.aiReplyLoading[commentId] = loading;
+        },
+
+        // 处理 AI 回复错误
+        handleAIReplyError(commentId, error) {
+            console.error('AI 回复生成失败:', error);
+            
+            // 设置错误状态
+            this.aiReplyError[commentId] = true;
+            
+            // 根据错误类型显示不同的错误消息
+            let errorMessage = '生成 AI 回复失败';
+            
+            if (error.response) {
+                const status = error.response.status;
+                const data = error.response.data;
+                
+                if (status === 401) {
+                    errorMessage = '请先登录';
+                } else if (status === 403) {
+                    errorMessage = '无权限访问该视频';
+                } else if (status === 408 || data?.error?.includes('超时')) {
+                    errorMessage = '请求超时，请稍后重试';
+                } else if (status === 503 || data?.error?.includes('配置错误')) {
+                    errorMessage = '服务配置错误';
+                } else if (data?.error?.includes('网络')) {
+                    errorMessage = '网络连接失败';
+                } else if (data?.error?.includes('未能生成')) {
+                    errorMessage = '未能生成回复，请重试';
+                } else if (data?.error) {
+                    errorMessage = data.error;
+                }
+            } else if (error.request) {
+                errorMessage = '网络连接失败';
+            }
+            
+            this.$message.error({ message: errorMessage, showClose: true });
+            
+            // 3秒后清除错误状态
+            setTimeout(() => {
+                this.aiReplyError[commentId] = false;
+            }, 3000);
+        },
+
+        // 生成 AI 回复
+        async generateAIReply(comment, replyComment = null) {
+            // 确定实际要回复的评论（二级评论或一级评论）
+            const targetComment = replyComment || comment;
+            const targetCommentId = targetComment.videoCommentId;
+            
+            try {
+                // 刷新用户信息
+                this.refreshUserInfo();
+                
+                if (!this.userInfo) {
+                    this.$message.warning({ message: '请先登录', showClose: true });
+                    return;
+                }
+                
+                // 设置加载状态（使用目标评论的ID）
+                this.setAIReplyLoading(targetCommentId, true);
+                
+                // 收集视频上下文
+                const videoContext = {
+                    videoId: this.getVideoIdByURL(),
+                    videoName: this.videoName,
+                    videoTitle: this.videoTitle,
+                    videoType: this.videoType
+                };
+                
+                // 收集评论上下文
+                const commentContext = {
+                    commentId: targetComment.videoCommentId,
+                    commentContent: targetComment.videoCommentContent,
+                    commentAuthor: targetComment.userName || targetComment.userId
+                };
+                
+                // 如果是回复评论，添加父评论上下文
+                if (replyComment && replyComment.parentId) {
+                    const parentComment = this.findCommentById(this.comments, replyComment.parentId);
+                    if (parentComment) {
+                        commentContext.parentCommentContent = parentComment.videoCommentContent;
+                        commentContext.parentCommentAuthor = parentComment.userName || parentComment.userId;
+                    }
+                }
+                
+                // 构建请求数据
+                const requestData = {
+                    videoId: videoContext.videoId,
+                    commentId: commentContext.commentId,
+                    commentContent: commentContext.commentContent,
+                    commentAuthor: commentContext.commentAuthor,
+                    parentCommentContent: commentContext.parentCommentContent,
+                    parentCommentAuthor: commentContext.parentCommentAuthor
+                };
+                
+                // 调用 AI 回复 API
+                const response = await authService.generateAIReply(requestData);
+                
+                if (response.status === 200 && response.data.success) {
+                    const replyText = response.data.replyText;
+                    
+                    // 自动填充到评论输入框
+                    this.addComment.videoCommentContent = replyText;
+                    
+                    // 设置回复目标
+                    this.replyTo = targetComment;
+                    this.addComment.parentId = targetComment.videoCommentId;
+                    this.addComment.replyToId = targetComment.userId;
+                    
+                    // 聚焦到输入框
+                    this.$nextTick(() => {
+                        this.focusCommentInput();
+                    });
+                    
+                    this.$message.success({ message: 'AI 回复已生成，请审阅后发送', showClose: true });
+                } else {
+                    throw new Error(response.data.error || '生成失败');
+                }
+                
+            } catch (error) {
+                this.handleAIReplyError(targetCommentId, error);
+            } finally {
+                // 清除加载状态（使用目标评论的ID）
+                this.setAIReplyLoading(targetCommentId, false);
+            }
+        },
+
+        // 处理 AI 回复按钮点击
+        async handleAIReplyClick(comment, replyComment = null) {
+            await this.generateAIReply(comment, replyComment);
         }
 
     },
@@ -2089,5 +2254,258 @@ video {
     height: calc(100vh - 50px);
     /* 减去Tab头部高度 */
     background: #f7f8fa;
+}
+
+/* AI 回复按钮样式优化 */
+.comment-actions .el-button[style*="color: #409EFF"] {
+    position: relative;
+    color: #409EFF !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.comment-actions .el-button[style*="color: #409EFF"]:hover:not(:disabled) {
+    background: rgba(64, 158, 255, 0.1);
+    color: #66b1ff !important;
+    transform: translateY(-1px);
+}
+
+.comment-actions .el-button[style*="color: #409EFF"]:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* AI 回复按钮禁用状态 */
+.comment-actions .el-button[style*="color: #409EFF"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(64, 158, 255, 0.05);
+}
+
+/* AI 回复按钮图标样式 */
+.comment-actions .el-button[style*="color: #409EFF"] .el-icon {
+    font-size: 14px;
+    vertical-align: middle;
+    transition: transform 0.3s ease;
+}
+
+.comment-actions .el-button[style*="color: #409EFF"]:hover:not(:disabled) .el-icon {
+    transform: scale(1.1);
+}
+
+/* AI 回复加载动画 */
+@keyframes ai-reply-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.comment-actions .el-button.is-loading {
+    animation: ai-reply-pulse 1.5s ease-in-out infinite;
+}
+
+/* AI 回复加载中的旋转动画 */
+@keyframes ai-reply-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.comment-actions .el-button.is-loading .el-icon {
+    animation: ai-reply-spin 1s linear infinite;
+}
+
+/* AI 回复错误提示样式 */
+.ai-reply-error-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* AI 回复成功提示样式 */
+.ai-reply-success-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideInRight 0.3s ease-out;
+}
+
+/* 移动端响应式样式 */
+@media screen and (max-width: 768px) {
+    /* 调整 AI 回复按钮在移动端的大小 */
+    .comment-actions .el-button[style*="color: #409EFF"] {
+        font-size: 12px;
+        padding: 3px 6px;
+    }
+    
+    .comment-actions .el-button[style*="color: #409EFF"] .el-icon {
+        font-size: 12px;
+        margin-right: 1px;
+    }
+    
+    /* 移动端评论操作按钮间距调整 */
+    .comment-actions {
+        gap: 4px;
+    }
+    
+    /* 移动端错误提示位置调整 */
+    .ai-reply-error-message,
+    .ai-reply-success-message {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    /* 移动端视频容器调整 */
+    .video-container {
+        max-width: 100vw;
+        height: auto;
+    }
+    
+    video {
+        height: 50vh;
+    }
+    
+    .danmaku-container {
+        height: 50vh;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    /* 超小屏幕进一步优化 */
+    .comment-actions .el-button[style*="color: #409EFF"] {
+        font-size: 11px;
+        padding: 2px 4px;
+    }
+    
+    .comment-card {
+        padding: 12px 14px 8px 14px;
+        font-size: 14px;
+    }
+    
+    .comment-card-content {
+        font-size: 14px;
+    }
+    
+    .reply-item {
+        padding: 6px;
+        font-size: 13px;
+    }
+}
+
+/* AI 回复按钮加载状态的额外视觉反馈 */
+.comment-actions .el-button[style*="color: #409EFF"].is-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(64, 158, 255, 0.2), transparent);
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* AI 回复按钮悬停时的光晕效果 */
+.comment-actions .el-button[style*="color: #409EFF"]:hover:not(:disabled)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(64, 158, 255, 0.3);
+    transform: translate(-50%, -50%);
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    to {
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+    }
+}
+
+/* 深色主题下的 AI 回复按钮样式 */
+.custom-comment-block .comment-actions .el-button[style*="color: #409EFF"] {
+    color: #66b1ff !important;
+}
+
+.custom-comment-block .comment-actions .el-button[style*="color: #409EFF"]:hover:not(:disabled) {
+    background: rgba(102, 177, 255, 0.15);
+    color: #79bbff !important;
+}
+
+/* 回复区域的 AI 按钮样式 */
+.reply-actions .el-button[style*="color: #409EFF"] {
+    font-size: 12px;
+    padding: 2px 6px;
+}
+
+.reply-actions .el-button[style*="color: #409EFF"] .el-icon {
+    font-size: 12px;
+}
+
+/* 确保按钮文字不换行 */
+.comment-actions .el-button[style*="color: #409EFF"],
+.reply-actions .el-button[style*="color: #409EFF"] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 加载状态下的文字样式 */
+.comment-actions .el-button.is-loading,
+.reply-actions .el-button.is-loading {
+    pointer-events: none;
+    user-select: none;
 }
 </style>

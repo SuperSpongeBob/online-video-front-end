@@ -330,4 +330,9 @@ export default {
     async handleReport(handleData) {
         return await http.post('/api/admin/handleReport', handleData)
     },
+
+    // AI Reply: 生成 AI 回复
+    async generateAIReply(requestData) {
+        return await http.post('/api/ai/generate-reply', requestData)
+    },
 };
