@@ -1240,7 +1240,7 @@ export default {
                 if (status === 401) {
                     errorMessage = '请先登录';
                 } else if (status === 403) {
-                    errorMessage = '无权限访问该视频';
+                    errorMessage = data?.error || 'AI 回复功能仅对 VIP 会员和管理员开放，请升级会员后使用';
                 } else if (status === 408 || data?.error?.includes('超时')) {
                     errorMessage = '请求超时，请稍后重试';
                 } else if (status === 503 || data?.error?.includes('配置错误')) {
@@ -1276,6 +1276,14 @@ export default {
                 
                 if (!this.userInfo) {
                     this.$message.warning({ message: '请先登录', showClose: true });
+                    return;
+                }
+                
+                // 检查用户角色，仅 VIP 和管理员可使用 AI 回复
+                const userRoles = this.userInfo.roles || [];
+                const hasPermission = userRoles.some(r => r === 'VIP' || r === 'ADMIN' || r === 'ROLE_VIP' || r === 'ROLE_ADMIN');
+                if (!hasPermission) {
+                    this.$message.warning({ message: 'AI 回复功能仅对 VIP 会员和管理员开放，请升级会员后使用', showClose: true, duration: 4000 });
                     return;
                 }
                 

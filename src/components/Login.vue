@@ -56,8 +56,8 @@ export default {
     data() {
         return {
             user: {
-                userPhone: "17806573192",
-                userPassword: "admin123"
+                userPhone: "17806570000",//
+                userPassword: "admin123"//
             },
             loginType: 'user',
             formRef: null,
